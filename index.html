@@ -279,13 +279,13 @@
             #mainView { height: 100vh; }
             .patterns-container { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 
-            /* หน้าแรก: ลบตัวหนาออก และซ่อนอินพุตอัพโหลดรูปภาพ */
-            #globalImageUpload, #uploadZoneTitle { display: none !important; }
+            /* หน้าแรก: ซ่อนอินพุตอัพโหลดรูปภาพของหน้าแรก */
+            #globalImageUpload { display: none !important; }
 
             .editor-container { flex-direction: column; height: 100vh; width: 100vw; }
             
-            /* Workspace คุมสัดส่วนเพื่อเตรียมรองรับการเปิดหน้าจอมาแล้วเห็น PreviewArea ครบชิ้นงาน */
-            .workspace { height: calc(100% - 60px); flex: 1; width: 100%; }
+            /* ปรับพื้นที่พรีวิวเริ่มต้นให้เว้นพื้นที่ด้านล่างไม่ให้โดนพาเนลบังพิกัดสำคัญ */
+            .workspace { height: calc(100% - 60px); flex: 1; width: 100%; padding-bottom: 250px; }
             .workspace-header { padding: 8px 12px; gap: 8px; }
             .workspace-header span { display: none; }
             
@@ -300,9 +300,9 @@
                 position: fixed; bottom: 60px; left: 0; z-index: 1001;
                 background: #ffffff; transform: translateY(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
-            /* ตอนปิดซ่อน panel ให้เลื่อนหลบลงล่างสุดโดยอิงระยะขอบด้านบนของแถบสีขาว */
             .tools-panel.collapsed { transform: translateY(100%) !important; }
 
+            /* ลบ space ว่างหน้า grid edit / studio */
             .panel-content { padding: 8px 14px; overflow-y: auto; height: 100%; }
             
             #editPatternTitle, #editPatternDesc, .mini-preview-box, .desktop-tab-toggle, .tool-group h4, .tools-panel hr, #desktopPanelRulesZone { display: none !important; }
@@ -310,15 +310,15 @@
             .tool-group { margin-bottom: 0; padding: 4px 0; }
             .tool-group.active-tab { display: block !important; }
 
-            /* หน้า Grid Edit */
             #tabGridExpansion { padding: 4px 5px; }
             #tabGridExpansion .tool-row { margin-bottom: 8px; }
 
-            /* หน้า Studio */
+            /* จัดตำแหน่งและสัดส่วนหน้าสตูดิโอให้พอดี */
             .studio-layout-container {
                 grid-template-columns: 55px 1fr 65px; gap: 8px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
             }
             
+            /* จัด Canvas อยู่กลาง panel ในแกน x */
             .studio-center-col { display: flex; justify-content: center; align-items: center; width: 100%; }
             .canvas-container { width: 115px; height: 115px; border-radius: 6px; margin: 0 auto; }
             
@@ -328,7 +328,7 @@
             .line-size-horiz { margin-top: 3px; gap: 2px; }
             .line-dot-opt { height: 18px; }
             
-            .studio-right-col { gap: 4px; font-size: 0.7rem; justify-content: center; }
+            .studio-right-col { gap: 4px; font-size: 0.7er; justify-content: center; }
             .color-picker-wrapper { gap: 1px; }
             .circle-color-picker { width: 20px; height: 20px; }
             .color-checkbox { width: 13px; height: 13px; }
@@ -350,12 +350,13 @@
             .nav-tab-item svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
             .nav-tab-item.active { color: var(--text-color); background: #ffffff; font-weight: 600; }
 
-            /* แก้ไขให้ปุ่มซ่อน Panel แปะติดอยู่ตรงแนวขอบด้านบนของ Panel พอดีในทุกสเตท */
+            /* ปรับปุ่มกดซ่อน panel tools ให้อยู่ตรงตำแหน่งแนบติดกับเส้นขอบบนพอดี */
             .mobile-toggle-panel-btn {
                 display: flex; position: fixed; left: 50%; transform: translateX(-50%); z-index: 1005;
-                background: #ffffff; color: var(--text-color); border: 1px solid #cbd5e1; width: 50px; height: 20px;
+                background: #ffffff; color: var(--text-color); border: 1px solid #cbd5e1; width: 50px; height: 22px;
                 border-radius: 10px 10px 0 0; border-bottom: none; align-items: center; justify-content: center; cursor: pointer;
                 transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                margin-bottom: -1px;
             }
             .mobile-toggle-panel-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.3s; }
         }
@@ -369,9 +370,8 @@
     </header>
 
    <div class="upload-zone">
-        <!-- หน้าแรก: แยกหัวข้อตัวหนาออกจากตัวอ่อน เพื่อคุมการซ่อนผ่าน CSS บนโมบายล์ -->
-        <strong id="uploadZoneTitle">Upload Image Asset</strong>
-        <small id="uploadZonePrompt">Click Layout Card to Enter Edit Mode</small>
+        <!-- ลบข้อความตัวหนาเดิมออก เหลือเพียงโครงสร้างตัวอ่อนชี้แนะโหมด Edit -->
+        <small style="color: #64748b; font-size: 0.95rem;">Click Layout Card to Enter Edit Mode</small>
         <div class="upload-actions">
             <input type="file" id="globalImageUpload" accept="image/*">
             <button class="btn-outline" id="btnClearToP" style="font-size: 0.85rem; padding: 6px 12px;">Reset Image to Default</button>
@@ -607,7 +607,6 @@
         { id: 36, title: "36. Center Core Focus", desc: "Directs all graphic paths inward toward row centerlines to anchor visual attention.", matrix: ["mx","n","mx","n","mx","n","my","mxy","my","mxy","my","mxy","mx","n","mx","n","mx","n","my","mxy","my","mxy","my","mxy"] },
         { id: 37, title: "37. Alternate Cross Fill", desc: "Fills negative spaces using inverse diagonal rotations scattered over vacant grids.", matrix: ["n","mxy","n","mxy","n","mxy","mxy","n","mxy","n","mxy","n","n","mxy","n","mxy","n","mxy","mxy","n","mxy","n","mxy","n"] },
         { id: 38, title: "38. Chevron Chevron Flow V2", desc: "Creates sharp arrow configurations that dive vertically down screens without interruption.", matrix: ["r90","mx90","r90","mx90","r90","mx90","r90","mx90","r90","mx90","r90","mx90","r90","mx90","r90","mx90","r90","mx90","r90","mx90","r90","mx90","r90","mx90"] },
-        { id: 39, title: "39. Asymmetric Glide Symmetry", desc: "Slightly shifted translation paths frequently featured in modern architectural masonry.", matrix: ["n","my","r180","mx","n","my","r180","mx","n","my","r180","mx","n","my","r180","mx","n","my","r180","mx","n","my","r180","mx"] },
         { id: 40, title: "40. Fish Scale Layout", desc: "Overlaps modules conceptually to simulate scale arrays fanning outward.", matrix: ["my90","n","my90","n","my90","n","n","my90","n","my90","n","my90","my90","n","my90","n","my90","n","n","my90","n","my90","n","my90"] },
         { id: 41, title: "41. Matrix Inversion", desc: "Swaps independent X and Y axis orientations on odd/even coordinates sequentially.", matrix: ["mx","my","mx","my","mx","my","my","mx","my","mx","my","mx","mx","my","mx","my","mx","my","my","mx","my","mx","my","mx"] },
         { id: 42, title: "42. Offset Brick Mirror", desc: "Half-stepped running bond brick offsets coupled with mirrors to slice seam visibility.", matrix: ["n","mx","n","mx","n","mx","mx","n","mx","n","mx","n","n","mx","n","mx","n","mx","mx","n","mx","n","mx","n"] },
@@ -646,50 +645,22 @@
     function adjustMobilePanelHeight() {
         if (window.innerWidth > 991) return;
         const panel = document.getElementById('toolsPanel');
-        const toggleBtn = document.getElementById('mobileTogglePanel');
         const activeTab = document.querySelector('.tool-group.active-tab');
-        
+        const toggleBtn = document.getElementById('mobileTogglePanel');
         if (panel && activeTab && toggleBtn) {
-            let heightStr = '155px';
-            if (activeTab.id === 'tabTileStudio') {
-                heightStr = '245px';
+            let targetMaxHeight = '245px';
+            if (activeTab.id === 'tabGridExpansion') {
+                targetMaxHeight = '155px';
             }
+            panel.style.maxHeight = targetMaxHeight;
             
-            panel.style.maxHeight = heightStr;
-            
-            // ปรับระยะปุ่มยึดตำแหน่งให้อยู่บนขอบ Panel พอดีในทั้งสองสเตท
+            // ปรับตำแหน่งปุ่มซ่อนให้ตรงเสมอกับเส้นขอบบนพอดี (ขอบแผงเครื่องมือด้านล่าง)
             if (panel.classList.contains('collapsed')) {
                 toggleBtn.style.bottom = '60px';
             } else {
-                toggleBtn.style.bottom = (60 + parseInt(heightStr)) + 'px';
+                toggleBtn.style.bottom = (60 + parseInt(targetMaxHeight)) + 'px';
             }
         }
-    }
-
-    // ฟังก์ชันคำนวณสเกลเริ่มต้นเพื่อให้มองเห็นวัตถุใน Preview Area ได้ครบทั้งหมดพอดีตอนเปิดใช้งานครั้งแรก
-    function autoFitPreviewArea() {
-        const output = document.getElementById('tessellationOutput');
-        const area = document.getElementById('previewArea');
-        if (!output || !area) return;
-
-        // Reset ค่าดั้งเดิมชั่วคราวเพื่อใช้วัดขนาดจริง
-        output.style.transform = 'none';
-        
-        const outRect = output.getBoundingClientRect();
-        const areaRect = area.getBoundingClientRect();
-
-        if (outRect.width === 0 || areaRect.width === 0) return;
-
-        // คำนวณอัตราส่วนเพื่อหาค่าสเกลที่พอดีที่สุด (เผื่อขอบปลอดภัยไว้ 5%)
-        const scaleX = (areaRect.width * 0.95) / outRect.width;
-        const scaleY = (areaRect.height * 0.95) / outRect.height;
-        
-        scale = Math.min(scaleX, scaleY);
-        scale = Math.min(Math.max(0.2, scale), 1.5); // จำกัดขอบเขตที่เหมาะสม
-        
-        panX = 0;
-        panY = 0;
-        applyTransform();
     }
 
     function init() {
@@ -727,12 +698,7 @@
         }
     }
 
-    window.addEventListener('resize', () => {
-        setupResponsiveLayoutEngine();
-        if (document.getElementById('editorView').style.display === 'block') {
-            autoFitPreviewArea();
-        }
-    });
+    window.addEventListener('resize', setupResponsiveLayoutEngine);
 
     function generateExplorerGrid() {
         const wrapper = document.getElementById('patternsWrapper');
@@ -822,6 +788,8 @@
                 });
                 
                 adjustMobilePanelHeight();
+                // บังคับคำนวณตำแหน่งพรีวิวเริ่มต้นใหม่ให้เหมาะสมกับความสูงแท็บปัจจุบันไม่ให้โดนพาเนลบัง
+                autoFitPreviewToViewport();
             };
         });
     }
@@ -935,6 +903,46 @@
 
     let initialTouchDist = null;
 
+    // คำนวณขอบเขตและย่อ/เลื่อน Preview Layout เริ่มต้นให้อยู่ในระยะสายตาพอดีทั้งอัน ไม่โดนบีบหรือโดนบาร์ทับด้านล่าง
+    function autoFitPreviewToViewport() {
+        const output = document.getElementById('tessellationOutput');
+        if (!output) return;
+        
+        setTimeout(() => {
+            const rect = output.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            const availWidth = window.innerWidth;
+            // คำนวณความสูงที่มีอยู่จริงโดยหักลบแผงด้านบน แผงพาเนลด้านล่าง และแถบนำทาง
+            let panelHeight = 0;
+            if (window.innerWidth <= 991) {
+                const panel = document.getElementById('toolsPanel');
+                if (panel && !panel.classList.contains('collapsed')) {
+                    panelHeight = parseInt(panel.style.maxHeight) || 245;
+                }
+                panelHeight += 60; // รวมความสูงเนวิเกชันด้านล่างสุด
+            }
+            const availHeight = window.innerHeight - 60 - panelHeight; 
+
+            const rawWidth = rect.width / scale;
+            const rawHeight = rect.height / scale;
+
+            const scaleX = (availWidth * 0.85) / rawWidth;
+            const scaleY = (availHeight * 0.85) / rawHeight;
+            
+            scale = Math.min(scaleX, scaleY, 1); // กำหนดขนาดเริ่มต้นที่เหมาะสมที่สุด
+            
+            // ชดเชยจุดศูนย์กลางพิกัด Y (Offset แกนตั้งขึ้นไปด้านบนเล็กน้อยเพื่อหลบแผงทับ)
+            panX = 0;
+            if (window.innerWidth <= 991) {
+                panY = -(panelHeight / 4);
+            } else {
+                panY = 0;
+            }
+            applyTransform();
+        }, 60);
+    }
+
     function bindEvents() {
         window.addEventListener('popstate', (e) => {
             if(document.getElementById('editorView').style.display === 'block') {
@@ -1009,8 +1017,6 @@
                 document.getElementById('editPatternTitle').textContent = found.title;
                 document.getElementById('editPatternDesc').textContent = found.desc;
                 renderMiniPPreview(found); renderTessellation();
-                // จัดสเกลแบบเต็มตัวอัตโนมัติเมื่อกดสลับเปลี่ยน Layout Rules
-                setTimeout(autoFitPreviewArea, 50);
             }
         };
 
@@ -1031,18 +1037,16 @@
 
         const panel = document.getElementById('toolsPanel');
         const arrowToggleSvg = document.getElementById('arrowToggleSvg');
-        const toggleBtn = document.getElementById('mobileTogglePanel');
-        
-        toggleBtn.onclick = function() {
+        document.getElementById('mobileTogglePanel').onclick = function() {
             panel.classList.toggle('collapsed');
             const activeTab = document.querySelector('.tool-group.active-tab');
             let baseBottom = '60px';
             if (!panel.classList.contains('collapsed') && window.innerWidth <= 991) {
-                let heightStr = (activeTab && activeTab.id === 'tabTileStudio') ? '245px' : '155px';
-                baseBottom = (60 + parseInt(heightStr)) + 'px';
+                baseBottom = (activeTab && activeTab.id === 'tabGridExpansion') ? '155px' : '245px';
             }
             this.style.bottom = baseBottom;
             arrowToggleSvg.style.transform = panel.classList.contains('collapsed') ? "rotate(180deg)" : "rotate(0deg)";
+            autoFitPreviewToViewport();
         };
 
         window.addEventListener('keydown', (e) => { if(e.key === 'Control') isCtrlPressed = true; });
@@ -1077,7 +1081,7 @@
         previewArea.addEventListener('wheel', (e) => {
             e.preventDefault();
             if (e.deltaY < 0) scale *= 1.1; else scale /= 1.1;
-            scale = Math.min(Math.max(0.2, scale), 4);
+            scale = Math.min(Math.max(0.3, scale), 4);
             applyTransform();
         }, { passive: false });
 
@@ -1126,7 +1130,7 @@
                 );
                 const factor = currentDist / initialTouchDist;
                 initialTouchDist = currentDist;
-                scale = Math.min(Math.max(0.2, scale * factor), 4);
+                scale = Math.min(Math.max(0.3, scale * factor), 4);
                 applyTransform();
             }
         }, { passive: true });
@@ -1137,7 +1141,8 @@
         }, { passive: true });
 
         document.getElementById('btnResetZoom').onclick = (e) => {
-            e.stopPropagation(); autoFitPreviewArea();
+            e.stopPropagation(); scale = 1; panX = 0; panY = 0; applyTransform();
+            autoFitPreviewToViewport();
         };
 
         document.getElementById('btnSaveImage').onclick = saveOutputAsImage;
@@ -1146,6 +1151,15 @@
     function applyTransform() {
         const output = document.getElementById('tessellationOutput');
         if(output) output.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
+
+    function handleImageUpload(e, callback) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => callback(event.target.result);
+            reader.readAsDataURL(file);
+        }
     }
 
     function openEditor(pattern) {
@@ -1175,12 +1189,12 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 drawingHistory = []; historyStep = -1; saveCanvasState(); renderTessellation();
-                setTimeout(autoFitPreviewArea, 60); // จัดรูปหน้า Preview ให้พอดีตัวชิ้นงานทั้งหมดทันทีตอนเปิด
+                autoFitPreviewToViewport();
             };
             img.src = currentImageUrl;
         } else {
             drawingHistory = []; historyStep = -1; setupCanvasDefault(); renderTessellation();
-            setTimeout(autoFitPreviewArea, 60);
+            autoFitPreviewToViewport();
         }
         setupResponsiveLayoutEngine();
     }
