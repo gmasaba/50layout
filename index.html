@@ -194,6 +194,7 @@
 
         .tool-group { margin-bottom: 20px; display: none; }
         .tool-group.active-tab { display: block; }
+        .tool-group.active-tab { display: block; }
         .tool-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         .tool-row label { font-size: 0.85rem; width: 100px; color: #64748b; flex-shrink: 0; }
         .tool-row input[type="range"] { flex: 1; }
@@ -270,6 +271,9 @@
         .crop-preview-container { max-height: 400px; margin: 15px 0; background: #eee; position: relative; overflow: hidden; }
         #cropImageTag { max-width: 100%; display: block; }
 
+        /* ==========================================================================
+           --- MOBILE & TABLET RESPONSIVE STYLE (max-width: 991px) ---
+           ========================================================================= */
         @media (max-width: 991px) {
             body { overflow: hidden; position: fixed; width: 100%; height: 100%; }
             #mainView { height: 100vh; }
@@ -286,6 +290,7 @@
             #headerLayoutSelectWrapper { display: flex !important; visibility: visible !important; width: auto; max-width: 55%; }
             #headerLayoutSelectWrapper select { height: 36px; padding: 4px 8px; font-size: 0.85rem; border-radius: 6px; }
 
+            /* Bottom Panel System */
             .tools-panel {
                 width: 100% !important; min-width: 100% !important;
                 height: auto !important; max-height: 290px;
@@ -327,6 +332,7 @@
             .canvas-actions-row .btn-outline { padding: 4px; height: 28px; flex: 1; }
             .canvas-actions-row .btn-outline svg { width: 14px; height: 14px; }
 
+            /* แถบนำทางด้านล่าง */
             .mobile-nav-bar {
                 display: flex; position: fixed; bottom: 0; left: 0; width: 100vw; height: 60px;
                 background: #f8fafc; border-top: 1px solid #e2e8f0; z-index: 1002;
@@ -587,7 +593,7 @@
         { id: 43, title: "43. Corner Lock", desc: "Hooks perimeter nodes together around four corner coordinates to secure interlocking edges.", matrix: ["r90","r180","n","r270","r90","r180","n","r270","r90","r180","n","r270","r90","r180","n","r270","r90","r180","n","r270","r90","r180","n","r270"] },
         { id: 44, title: "44. Parallel Reflection Rows", desc: "Locks continuous horizontal lanes that face and reflect each other symmetrically.", matrix: ["n","n","n","n","n","n","my","my","my","my","my","my","my","my","my","my","my","my","n","n","n","n","n","n"] },
         { id: 45, title: "45. Parallel Reflection Columns", desc: "Locks continuous vertical lanes that face and reflect each other symmetrically.", matrix: ["n","mx","n","mx","n","mx","n","mx","n","mx","n","mx","n","mx","n","mx","n","mx","n","mx","n","mx","n","mx"] },
-        { id: 46, title: "46. Pinwheel Inverted", desc: "Reverses pinwheel vectors to produce a centrifugal layout drawing attention outward.", matrix: ["r270","r180","r90","n","r270","r180","r180","r90","n","r270","r180","r90","n","r270","r180","r90","n","r270","r180","r90","n","r270","r180","r90"] },
+        { id: 46, title: "46. Pinwheel Inverted", desc: "Reverses pinwheel vectors to produce a centrifugal layout drawing attention outward.", matrix: ["r270","r180","r90","n","r270","r180","r180","q90","n","r270","r180","r90","n","r270","r180","r90","n","r270","r180","r90","n","r270","r180","r90"] },
         { id: 47, title: "47. Double Diagonal Slide", desc: "Two-tier diagonal glides that distribute elements seamlessly across all directions.", matrix: ["n","n","r90","r90","n","n","r90","r90","n","n","r90","r90","n","n","r90","r90","n","n","r90","r90","n","n","r90","r90"] },
         { id: 48, title: "48. Maze Flow V2", desc: "Advanced labyrinth path flow utilizing a complex mixture of X/Y reflection offsets.", matrix: ["mx","my","mx","my","mx","my","r180","n","r180","n","r180","n","mx","my","mx","my","mx","my","r180","n","r180","n","r180","n"] },
         { id: 49, title: "49. Infinite Cross Grid", desc: "Symmetric grid structure that stacks cross-rotations exponentially across the field.", matrix: ["mxy","n","mxy","n","mxy","n","n","mxy","n","mxy","n","mxy","mxy","n","mxy","n","mxy","n","n","mxy","n","mxy","n","mxy"] },
@@ -607,6 +613,7 @@
     let startX = 0, startY = 0;
     let drawingHistory = [];
     let historyStep = -1;
+    let isCtrlPressed = false;
     let canvasSnapshot = null;
 
     // Zoom/Pan Matrix Controls
@@ -741,7 +748,7 @@
         const panel = document.getElementById('toolsPanel');
         
         navItems.forEach(item => {
-            item.onclick = () => {
+            item.onclick = (e) => {
                 if (window.innerWidth > 991) return;
 
                 const targetId = item.getAttribute('data-target');
@@ -773,18 +780,20 @@
         const dtTabs = document.querySelectorAll('.desktop-tab-btn');
         const groups = document.querySelectorAll('.tools-panel .tool-group');
 
-        tab.onclick = () => {
-            dtTabs.forEach(t => t.classList.remove('active'));
-            groups.forEach(g => g.classList.remove('active-tab'));
+        dtTabs.forEach(tab => {
+            tab.onclick = () => {
+                dtTabs.forEach(t => t.classList.remove('active'));
+                groups.forEach(g => g.classList.remove('active-tab'));
 
-            tab.classList.add('active');
-            const targetId = tab.getAttribute('data-target');
-            document.getElementById(targetId).classList.add('active-tab');
+                tab.classList.add('active');
+                const targetId = tab.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active-tab');
 
-            document.querySelectorAll('.nav-tab-item').forEach(n => {
-                n.classList.toggle('active', n.getAttribute('data-target') === targetId);
-            });
-        };
+                document.querySelectorAll('.nav-tab-item').forEach(n => {
+                    n.classList.toggle('active', n.getAttribute('data-target') === targetId);
+                });
+            };
+        });
     }
 
     function setupCanvasDefault() {
@@ -966,6 +975,14 @@
             img.src = originalSrc;
         };
 
+        // เพิ่มการทำงานของปุ่ม Clear Canvas (แก้ปัญหาปุ่มกดไม่ทำงาน)
+        document.getElementById('btnClearCanvas').onclick = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.style.backgroundColor = document.getElementById('bgColor').value;
+            saveCanvasState();
+            updateTilesFromCanvas();
+        };
+
         document.getElementById('btnResetToP').onclick = () => {
             drawingHistory = []; historyStep = -1;
             setupCanvasDefault(); updateTilesFromCanvas();
@@ -1005,27 +1022,8 @@
             selectedTool = 'fill';
         };
 
-        // ผูกฟังก์ชันเข้ากับปุ่ม Undo / Redo จริงบน Interface
-        document.getElementById('btnUndo').onclick = () => {
-            if (historyStep > 0) {
-                historyStep--;
-                restoreCanvasStep();
-            }
-        };
-
-        document.getElementById('btnRedo').onclick = () => {
-            if (historyStep < drawingHistory.length - 1) {
-                historyStep++;
-                restoreCanvasStep();
-            }
-        };
-
-        document.getElementById('btnClearCanvas').onclick = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            canvas.style.backgroundColor = document.getElementById('bgColor').value;
-            saveCanvasState();
-            updateTilesFromCanvas();
-        };
+        window.addEventListener('keydown', (e) => { if(e.key === 'Control') isCtrlPressed = true; });
+        window.addEventListener('keyup', (e) => { if(e.key === 'Control') isCtrlPressed = false; });
 
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
@@ -1240,6 +1238,11 @@
             ctx.beginPath();
             let width = currentX - startX; let height = currentY - startY;
 
+            if (isCtrlPressed) {
+                const maxLen = Math.max(Math.abs(width), Math.abs(height));
+                width = width >= 0 ? maxLen : -maxLen; height = height >= 0 ? maxLen : -maxLen;
+            }
+
             if (selectedTool === 'line') {
                 if (useStroke) { ctx.moveTo(startX, startY); ctx.lineTo(currentX, currentY); ctx.stroke(); }
             } else if (selectedTool === 'rect') {
@@ -1258,19 +1261,12 @@
     }
 
     function stopDrawing() { if (!isDrawing) return; isDrawing = false; saveCanvasState(); }
-    
     function saveCanvasState() {
         if (historyStep < drawingHistory.length - 1) drawingHistory = drawingHistory.slice(0, historyStep + 1);
         drawingHistory.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
         historyStep++;
     }
-    
-    function restoreCanvasStep() { 
-        if (historyStep >= 0 && historyStep < drawingHistory.length) { 
-            ctx.putImageData(drawingHistory[historyStep], 0, 0); 
-            updateTilesFromCanvas(); 
-        } 
-    }
+    function restoreCanvasStep() { if (historyStep >= 0 && historyStep < drawingHistory.length) { ctx.putImageData(drawingHistory[historyStep], 0, 0); updateTilesFromCanvas(); } }
 
     function saveOutputAsImage() {
         if(!activePattern) return;
