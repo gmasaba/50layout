@@ -157,7 +157,7 @@
             justify-content: center;
             position: relative;
             background: #f1f5f9;
-            touch-action: none; 
+            touch-action: none;
         }
         .tessellation-output {
             display: grid;
@@ -279,75 +279,66 @@
             #mainView { height: 100vh; }
             .patterns-container { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 
-            /* หน้าแรก: ซ่อนกล่อง input อัพโหลดรูปภาพ */
-            .upload-zone #globalImageUpload { display: none !important; }
-            .upload-zone strong { font-size: 1.1rem; }
+            /* หน้าแรก: ซ่อนอินพุตเลือกไฟล์บน Mobile */
+            #globalImageUpload { display: none !important; }
 
             .editor-container { flex-direction: column; height: 100vh; width: 100vw; }
             
-            /* ล็อควิวหลัก และให้พื้นที่ Preview ขยายยืดหยุ่นตามเนื้อหาที่เหลือ */
-            .workspace { height: calc(100vh - 60px); flex: 1; width: 100%; }
+            /* พื้นที่ Preview ควบคุมความสูงแปรผันตามขนาดหน้าจอ ล็อคไม่ให้เลื่อนหน้าจอหลักขณะ ซูม/แพน */
+            .workspace { height: calc(100% - 60px); flex: 1; width: 100%; }
             .workspace-header { padding: 8px 12px; gap: 8px; }
             .workspace-header span { display: none; }
             
             #headerLayoutSelectWrapper { display: flex !important; visibility: visible !important; width: auto; max-width: 55%; }
             #headerLayoutSelectWrapper select { height: 36px; padding: 4px 8px; font-size: 0.85rem; border-radius: 6px; }
 
-            /* Preview Area: สามารถทำ Pinch Zoom, Pan ลากเหวี่ยงได้อิสระ ไม่โดน Panel บังถาวร */
-            .preview-area { height: 100%; width: 100%; position: relative; z-index: 1; }
-
-            /* ปรับแต่งความสูงอัตโนมัติตามเนื้อหาภายในกลุ่ม และซ่อน Space ว่างส่วนเกิน */
+            /* Bottom Panel System: เปลี่ยนความสูงให้ยืดหยุ่นตามเนื้อหาของแต่ละแท็บ */
             .tools-panel {
                 width: 100% !important; min-width: 100% !important;
-                height: auto !important; max-height: 250px;
+                height: auto !important; max-height: 290px;
                 border-left: none; border-top: 1px solid #e2e8f0;
                 position: fixed; bottom: 60px; left: 0; z-index: 1001;
                 background: #ffffff; transform: translateY(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
             }
-            /* ล็อคขนาดฝั่ง Panel ไม่ให้โดน Zoom ตามหน้า Preview */
-            .tools-panel, .mobile-nav-bar, .mobile-toggle-panel-btn { transform-origin: none !important; zoom: 1 !important; }
-            
-            .tools-panel.collapsed { transform: translateY(100%); }
-            .panel-content { padding: 8px 12px; overflow-y: auto; overflow-x: hidden; height: 100%; }
+            .tools-panel.collapsed { transform: translateY(100%) !important; }
+
+            /* ลบ space ว่างที่ไม่จำเป็นและตัดการ Scroll หลักออกหากข้อมูลไม่เกินขนาด */
+            .panel-content { padding: 8px 14px; overflow-y: auto; height: 100%; }
             
             #editPatternTitle, #editPatternDesc, .mini-preview-box, .desktop-tab-toggle, .tool-group h4, .tools-panel hr, #desktopPanelRulesZone { display: none !important; }
 
+            /* การซ่อนและสลับเนื้อหาตามความสูงที่เหมาะสมของแต่ละหน้า */
             .tool-group { margin-bottom: 0; padding: 4px 0; }
             .tool-group.active-tab { display: block !important; }
 
-            /* ลบ Space พื้นที่ว่างในหน้า Grid Edit */
-            #tabGridExpansion .tool-row { margin-bottom: 6px; }
-            #tabGridExpansion .tool-row:last-child { margin-bottom: 0; }
+            /* หน้า Grid Edit: ลบ Space ว่างและกระชับช่องระยะของแต่ละสไลด์บาร์ */
+            #tabGridExpansion { padding: 4px 5px; }
+            #tabGridExpansion .tool-row { margin-bottom: 8px; }
 
-            /* ปรับแต่งหน้า Studio: จัดกึ่งกลางแกน X, ปรับสัดส่วนพอดีโดยไม่ต้องเลื่อนขึ้นลง */
+            /* หน้า Studio: จัดเรียงเครื่องมือคอมแพ็คต์ให้อยู่ครบในหน้าเดียว ไม่ล้น ไม่ต้องเลื่อนบาร์ */
             .studio-layout-container {
-                grid-template-columns: 55px 145px 80px; 
-                gap: 12px; 
-                margin-top: 0px; 
-                justify-content: center; 
-                align-content: center; 
-                width: 100%;
+                grid-template-columns: 55px 1fr 65px; gap: 8px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
             }
-            .studio-center-col {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 100%;
-            }
-            .canvas-container { 
-                width: 140px; 
-                height: 140px; 
-                margin: 0 auto;
-            } 
-            .tools-grid-3x2 { gap: 3px; }
-            .tool-btn-outline { height: 28px; }
-            .line-size-horiz { margin-top: 2px; }
-            .line-dot-opt { height: 20px; }
-            .studio-right-col { gap: 4px; font-size: 0.7rem; }
+            
+            /* จัด Canvas ให้อยู่กึ่งกลางแนวแกน X (Horizontal Center) และลดขนาดให้พอดีไม่ล้นพื้นที่ */
+            .studio-center-col { display: flex; justify-content: center; align-items: center; width: 100%; }
+            .canvas-container { width: 115px; height: 115px; border-radius: 6px; margin: 0 auto; }
+            
+            .tools-grid-3x2 { gap: 4px; }
+            .tool-btn-outline { height: 28px; padding: 2px; }
+            .tool-btn-outline svg { width: 14px; height: 14px; }
+            .line-size-horiz { margin-top: 3px; gap: 2px; }
+            .line-dot-opt { height: 18px; }
+            
+            /* กลุ่มเลือกสีแบบ Compact ด้านขวา */
+            .studio-right-col { gap: 4px; font-size: 0.7rem; justify-content: center; }
+            .color-picker-wrapper { gap: 1px; }
             .circle-color-picker { width: 20px; height: 20px; }
-            .canvas-actions-row { margin-top: 4px; gap: 4px; justify-content: center; }
-            .canvas-actions-row .btn-outline { padding: 2px; height: 28px; width: 32px; }
+            .color-checkbox { width: 13px; height: 13px; }
+            
+            /* แถวปุ่มคำสั่งด้านล่างของ Studio Layer */
+            .canvas-actions-row { margin-top: 6px; gap: 4px; }
+            .canvas-actions-row .btn-outline { padding: 4px; height: 28px; flex: 1; }
             .canvas-actions-row .btn-outline svg { width: 14px; height: 14px; }
 
             /* แถบนำทางด้านล่าง */
@@ -363,15 +354,14 @@
             .nav-tab-item svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
             .nav-tab-item.active { color: var(--text-color); background: #ffffff; font-weight: 600; }
 
-            /* ปุ่มซ่อน/แสดงแผงสไลด์ */
+            /* ปุ่มซ่อน / แสดง Panel เครื่องมือด้านล่าง */
             .mobile-toggle-panel-btn {
-                display: flex; position: fixed; bottom: 250px; left: 50%; transform: translateX(-50%); z-index: 1005;
-                background: #ffffff; color: var(--text-color); border: 1px solid #e2e8f0; width: 50px; height: 24px;
-                border-radius: 12px 12px 0 0; border-bottom: none; box-shadow: 0 -3px 6px rgba(0,0,0,0.03); align-items: center; justify-content: center; cursor: pointer;
+                display: flex; position: fixed; left: 50%; transform: translateX(-50%); z-index: 1005;
+                background: #ffffff; color: var(--text-color); border: 1px solid #e2e8f0; width: 50px; height: 22px;
+                border-radius: 10px 10px 0 0; border-bottom: none; box-shadow: 0 -3px 6px rgba(0,0,0,0.03); align-items: center; justify-content: center; cursor: pointer;
                 transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
-            .tools-panel.collapsed + .mobile-toggle-panel-btn { bottom: 60px; border-bottom: 1px solid #e2e8f0; border-radius: 12px 12px 12px 12px; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); }
-            .mobile-toggle-panel-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.3s; }
+            .mobile-toggle-panel-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.3s; }
         }
     </style>
 </head>
@@ -383,7 +373,8 @@
     </header>
 
    <div class="upload-zone">
-        <strong>Click Layout Card to Enter Edit Mode</strong><br>
+        <strong id="uploadZonePrompt">Upload Image Asset</strong><br>
+        <small>Click Layout Card to Enter Edit Mode</small>
         <div class="upload-actions">
             <input type="file" id="globalImageUpload" accept="image/*">
             <button class="btn-outline" id="btnClearToP" style="font-size: 0.85rem; padding: 6px 12px;">Reset Image to Default</button>
@@ -639,6 +630,7 @@
     let selectedLineWidth = 6;
     let cropper = null; 
 
+    // Canvas Engine State
     const canvas = document.getElementById('tileCanvas');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
@@ -648,14 +640,27 @@
     let isCtrlPressed = false;
     let canvasSnapshot = null;
 
+    // Zoom/Pan Matrix Controls
     let scale = 1;
     let panX = 0, panY = 0;
     let isPanning = false;
     let startPanX = 0, startPanY = 0;
 
-    // ตัวแปรสำหรับ Touch Pinch Zoom บนมือถือ
-    let initialPinchDist = null;
-    let initialScale = 1;
+    // ปรับปรุงกลไกสลับความสูง Panel ตามแท็บที่ใช้งานบน Mobile
+    function adjustMobilePanelHeight() {
+        if (window.innerWidth > 991) return;
+        const panel = document.getElementById('toolsPanel');
+        const activeTab = document.querySelector('.tool-group.active-tab');
+        if (panel && activeTab) {
+            if (activeTab.id === 'tabGridExpansion') {
+                panel.style.maxHeight = '155px';
+                document.getElementById('mobileTogglePanel').style.bottom = panel.classList.contains('collapsed') ? '60px' : '155px';
+            } else if (activeTab.id === 'tabTileStudio') {
+                panel.style.maxHeight = '245px';
+                document.getElementById('mobileTogglePanel').style.bottom = panel.classList.contains('collapsed') ? '60px' : '245px';
+            }
+        }
+    }
 
     function init() {
         generateExplorerGrid();
@@ -667,6 +672,7 @@
         setupDesktopTabs();
         bindEvents();
         setupResponsiveLayoutEngine();
+        setTimeout(adjustMobilePanelHeight, 150);
     }
 
     function setupResponsiveLayoutEngine() {
@@ -674,17 +680,23 @@
         const headerContainer = document.getElementById('headerLayoutSelectWrapper');
         const desktopPanelZone = document.getElementById('desktopSelectAnchor');
         const textLabels = document.querySelectorAll('.color-name-text');
+        const promptText = document.getElementById('uploadZonePrompt');
 
         if (window.innerWidth <= 991) {
             headerContainer.appendChild(selectElement);
+            if(promptText) promptText.textContent = "Click Layout Card to Enter Edit Mode";
             textLabels.forEach(label => {
                 label.textContent = label.getAttribute('data-mobile');
             });
+            adjustMobilePanelHeight();
         } else {
             desktopPanelZone.appendChild(selectElement);
+            if(promptText) promptText.textContent = "Upload Image Asset";
             textLabels.forEach(label => {
                 label.textContent = label.getAttribute('data-desktop');
             });
+            const panel = document.getElementById('toolsPanel');
+            if(panel) panel.style.maxHeight = 'none';
         }
     }
 
@@ -763,8 +775,6 @@
     function setupMobileTabSystems() {
         const navItems = document.querySelectorAll('.nav-tab-item');
         const groups = document.querySelectorAll('.tools-panel .tool-group');
-        const panel = document.getElementById('toolsPanel');
-        const toggleBtn = document.getElementById('mobileTogglePanel');
         
         navItems.forEach(item => {
             item.onclick = () => {
@@ -778,19 +788,9 @@
                 document.querySelectorAll('.desktop-tab-btn').forEach(d => {
                     d.classList.toggle('active', d.getAttribute('data-target') === targetId);
                 });
-
-                // สลับความสูง Panel อัตโนมัติตามเนื้อหาภายในแท็บที่เปิด
-                if (window.innerWidth <= 991) {
-                    panel.classList.remove('collapsed');
-                    document.getElementById('arrowToggleSvg').style.transform = "rotate(0deg)";
-                    if (targetId === 'tabGridExpansion') {
-                        panel.style.maxHeight = '145px';
-                        toggleBtn.style.bottom = '145px';
-                    } else {
-                        panel.style.maxHeight = '235px';
-                        toggleBtn.style.bottom = '235px';
-                    }
-                }
+                
+                // ดึงความสูงบาร์ให้เหมาะสมและอัพเดตตำแหน่งปุ่ม Toggle ทันที
+                adjustMobilePanelHeight();
             };
         });
     }
@@ -902,6 +902,9 @@
         return rowElements[c % pX] || "n";
     }
 
+    // เพิ่มตัวแปรสำหรับคุม Touch Gestures บน Preview Area
+    let initialTouchDist = null;
+
     function bindEvents() {
         window.addEventListener('popstate', (e) => {
             if(document.getElementById('editorView').style.display === 'block') {
@@ -996,23 +999,15 @@
 
         const panel = document.getElementById('toolsPanel');
         const arrowToggleSvg = document.getElementById('arrowToggleSvg');
-        const mobileToggleBtn = document.getElementById('mobileTogglePanel');
-
-        mobileToggleBtn.onclick = function() {
+        document.getElementById('mobileTogglePanel').onclick = function() {
             panel.classList.toggle('collapsed');
-            if(panel.classList.contains('collapsed')) {
-                arrowToggleSvg.style.transform = "rotate(180deg)";
-                mobileToggleBtn.style.bottom = '60px';
-            } else {
-                arrowToggleSvg.style.transform = "rotate(0deg)";
-                // คืนค่าความสูงของปุ่มตามกลุ่มเครื่องมือที่ทำงานอยู่จริง
-                const activeTab = document.querySelector('.tools-panel .tool-group.active-tab');
-                if (activeTab && activeTab.id === 'tabGridExpansion') {
-                    mobileToggleBtn.style.bottom = '145px';
-                } else {
-                    mobileToggleBtn.style.bottom = '235px';
-                }
+            const activeTab = document.querySelector('.tool-group.active-tab');
+            let baseBottom = '60px';
+            if (!panel.classList.contains('collapsed') && window.innerWidth <= 991) {
+                baseBottom = (activeTab && activeTab.id === 'tabGridExpansion') ? '155px' : '245px';
             }
+            this.style.bottom = baseBottom;
+            arrowToggleSvg.style.transform = panel.classList.contains('collapsed') ? "rotate(180deg)" : "rotate(0deg)";
         };
 
         window.addEventListener('keydown', (e) => { if(e.key === 'Control') isCtrlPressed = true; });
@@ -1043,7 +1038,7 @@
         document.getElementById('btnRedo').onclick = () => { if(historyStep < drawingHistory.length - 1) { historyStep++; restoreCanvasStep(); } };
         document.getElementById('btnClearCanvas').onclick = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); saveCanvasState(); updateTilesFromCanvas(); };
 
-        // --- เปิดระบบ Zoom และ Pan สมบูรณ์แบบบนพื้นที่ Preview Area สำหรับ Mobile/Tablet ---
+        // ผูกมัดสิทธิการซูมและแพนภาพ (Zoom & Pan) ให้ทำงานสมบูรณ์แบบบน Mobile Preview Area
         const previewArea = document.getElementById('previewArea');
         previewArea.addEventListener('wheel', (e) => {
             e.preventDefault();
@@ -1067,32 +1062,23 @@
         });
         window.addEventListener('mouseup', () => { isPanning = false; });
 
-        // รองรับระบบ Touch Pan และ Multi-touch Pinch Zoom
         previewArea.addEventListener('touchstart', function(e) {
-            if (e.touches.length === 2) {
-                // เก็บค่าระยะห่างนิ้วเริ่มต้นเพื่อคำนวณ Pinch Zoom
-                initialPinchDist = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                initialScale = scale;
-            } else if (e.touches.length === 1) {
+            if (e.touches.length === 1) {
                 isPanning = true;
                 const touch = e.touches[0];
                 startPanX = touch.clientX - panX; startPanY = touch.clientY - panY;
+            } else if (e.touches.length === 2) {
+                // ตรวจจับกลไกสองนิ้วถ่างเพื่อ Zoom เข้า/ออก (Pinch to Zoom)
+                isPanning = false;
+                initialTouchDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
             }
         }, { passive: true });
 
         previewArea.addEventListener('touchmove', function(e) {
-            if (e.touches.length === 2 && initialPinchDist) {
-                const currentDist = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                const factor = currentDist / initialPinchDist;
-                scale = Math.min(Math.max(0.3, initialScale * factor), 4);
-                applyTransform();
-            } else if (isPanning && e.touches.length === 1) {
+            if (isPanning && e.touches.length === 1) {
                 const touch = e.touches[0];
                 let targetX = touch.clientX - startPanX;
                 let targetY = touch.clientY - startPanY;
@@ -1100,12 +1086,21 @@
                 panX = Math.min(Math.max(-maxW, targetX), maxW);
                 panY = Math.min(Math.max(-maxH, targetY), maxH);
                 applyTransform();
+            } else if (e.touches.length === 2 && initialTouchDist !== null) {
+                const currentDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const factor = currentDist / initialTouchDist;
+                initialTouchDist = currentDist;
+                scale = Math.min(Math.max(0.3, scale * factor), 4);
+                applyTransform();
             }
         }, { passive: true });
 
         previewArea.addEventListener('touchend', function(e) {
-            if (e.touches.length < 2) initialPinchDist = null;
-            if (e.touches.length === 0) isPanning = false;
+            isPanning = false;
+            if (e.touches.length < 2) initialTouchDist = null;
         }, { passive: true });
 
         document.getElementById('btnResetZoom').onclick = (e) => {
@@ -1117,7 +1112,7 @@
 
     function applyTransform() {
         const output = document.getElementById('tessellationOutput');
-        output.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        if(output) output.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     }
 
     function handleImageUpload(e, callback) {
@@ -1145,9 +1140,6 @@
         if (window.innerWidth <= 991) {
             document.getElementById('gridSizeInput').value = 40;
             document.getElementById('gridSizeNum').value = 40;
-            // บังคับรีเซ็ต Panel ไปที่ขนาดของแท็บเริ่มแรก (Grid Expansion)
-            document.getElementById('toolsPanel').style.maxHeight = '145px';
-            document.getElementById('mobileTogglePanel').style.bottom = '145px';
         } else {
             document.getElementById('gridSizeInput').value = 80;
             document.getElementById('gridSizeNum').value = 80;
