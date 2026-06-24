@@ -272,7 +272,7 @@
 
         /* ==========================================================================
            --- MOBILE & TABLET RESPONSIVE STYLE (max-width: 991px) ---
-           ========================================================================== */
+           ========================================================================= */
         @media (max-width: 991px) {
             body { overflow: hidden; position: fixed; width: 100%; height: 100%; }
             #mainView { height: 100vh; }
@@ -755,7 +755,7 @@
                 const isPanelCollapsed = panel.classList.contains('collapsed');
 
                 if (isCurrentlyActive && !isPanelCollapsed) {
-                    // กดซ้ำที่เมนูเดิมตอนที่แผงเปิดอยู่ -> ทำการปิด (ซ่อน) พาเนลเหมือนปิดสวิตช์
+                    // กดซ้ำที่เมนูเดิมตอนที่แผงเปิดอยู่ -> ทำการปิด (ซ่อน) พาเนล
                     panel.classList.add('collapsed');
                     item.classList.remove('active');
                 } else {
@@ -773,7 +773,9 @@
                     
                     adjustMobilePanelHeight();
                 }
-                autoFitPreviewToViewport();
+                
+                // ลบฟังก์ชัน autoFitPreviewToViewport() ตรงนี้ออกตามความต้องการ 
+                // เพื่อไม่ให้ตำแหน่งหรือขนาดพรีวิวขยับเปลี่ยนไปมาตามการกดสลับเมนูเปิด-ปิด
             };
         });
     }
@@ -887,6 +889,7 @@
 
     let initialTouchDist = null;
 
+    // ฟังก์ชันคำนวณขนาดและจัดให้อยู่ในตําแหน่งที่เหมาะสมตอนเริ่มต้นเปิด Editor ครั้งแรก
     function autoFitPreviewToViewport() {
         const output = document.getElementById('tessellationOutput');
         if (!output) return;
