@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>50 Layout Patterns Generator & Explorer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <style>
@@ -277,91 +277,67 @@
         @media (max-width: 991px) {
             body { overflow: hidden; position: fixed; width: 100%; height: 100%; }
             #mainView { height: 100vh; }
-            
-            /* หน้าแรก: ซ่อนอัพโหลดรูปภาพบนโมบายล์ */
-            #mainView .upload-zone { display: none !important; }
-            
             .patterns-container { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 
-            .editor-container { flex-direction: column; height: 100vh; width: 100vw; }
+            /* [1] หน้าแรก: ซ่อนโซนอัพโหลดหลัก แต่คงประโยคและปุ่ม Reset ไว้ */
+            .upload-zone strong, #globalImageUpload { display: none !important; }
+
+            /* ใช้ Flexbox ปรับระดับความสูงหน้า Edit ตามคอนเทนต์แผงควบคุมหลัก */
+            .editor-container { flex-direction: column; height: 100vh; width: 100vw; display: flex; overflow: hidden; }
             
-            /* พื้นที่พรีวิวสามารถเลื่อนและซูมได้อิสระ */
-            .workspace { height: calc(100vh - 290px); flex: none; width: 100%; }
+            /* พื้นที่แสดงผลยืดหยุ่นรองรับการ Zoom In / Zoom Out ได้เต็มที่ */
+            .workspace { flex: 1; width: 100%; height: auto; min-height: 0; }
             .workspace-header { padding: 8px 12px; gap: 8px; }
             .workspace-header span { display: none; }
             
             #headerLayoutSelectWrapper { display: flex !important; visibility: visible !important; width: auto; max-width: 55%; }
             #headerLayoutSelectWrapper select { height: 36px; padding: 4px 8px; font-size: 0.85rem; border-radius: 6px; }
 
-            /* Bottom Panel: ล็อคขนาดความสูงไว้ตายตัวไม่ให้ซูมสัดส่วนเพี้ยน */
+            /* [3] ล็อคขนาดและตั้งค่าความสูงแผงควบคุมให้เป็น Auto ตามเนื้อหาของแต่ละหน้า */
             .tools-panel {
                 width: 100% !important; min-width: 100% !important;
-                height: 230px !important; max-height: 230px;
+                height: auto !important; max-height: 250px;
                 border-left: none; border-top: 1px solid #e2e8f0;
-                position: fixed; bottom: 60px; left: 0; z-index: 1001;
-                background: #ffffff; transform: translateY(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                touch-action: none; /* ห้าม zoom/scroll ทับซ้อนตัว panel */
+                position: relative; bottom: 0; left: 0; z-index: 1001;
+                background: #ffffff; transform: translateY(0); 
+                transition: max-height 0.25s ease-out, opacity 0.2s ease;
+                padding-bottom: 60px; /* เว้นระยะความสูงไม่ให้โดนแถบเมนูนำทางล่างบัง */
             }
-            .tools-panel.collapsed { transform: translateY(100%); }
+            .tools-panel.collapsed { max-height: 0 !important; padding-bottom: 0; overflow: hidden; opacity: 0; pointer-events: none; }
 
-            /* ปรับพื้นที่ภายใน Panel ให้พอดี ไม่เหลือ Space ว่าง และไม่ต้องเลื่อนขึ้นลง */
-            .panel-content { padding: 8px 12px; overflow: hidden; height: 100%; }
+            .panel-content { padding: 8px 14px; overflow-y: auto; height: 100%; }
             
             #editPatternTitle, #editPatternDesc, .mini-preview-box, .desktop-tab-toggle, .tool-group h4, .tools-panel hr, #desktopPanelRulesZone { display: none !important; }
 
-            .tool-group { margin-bottom: 0; height: 100%; }
+            .tool-group { margin-bottom: 0; }
             .tool-group.active-tab { display: block !important; }
 
-            /* หน้า Grid Edit: ลบ space ว่าง ปรับแถว Slider ให้กระชับขึ้น */
-            #tabGridExpansion { padding-top: 10px; }
-            #tabGridExpansion .tool-row { margin-bottom: 6px; gap: 8px; }
-            #tabGridExpansion .tool-row label { font-size: 0.8rem; width: 85px; }
-            #tabGridExpansion .num-input { width: 50px; padding: 4px; font-size: 0.85rem; }
+            /* [4] ลบช่องว่างส่วนเกินหน้า Grid Expansion Tool */
+            #tabGridExpansion .tool-row { margin-bottom: 6px; }
 
-            /* หน้า Studio: ปรับสัดส่วนทั้งหมดให้กระชับอยู่กึ่งกลาง ไม่ล้นหน้าจอ */
+            /* [5-6] หน้า Studio ปรับสัดส่วนให้พอดี ไม่โดนบัง ไม่ต้องเลื่อนจอ และจัด Canvas อยู่ตรงกลางแกน X */
             .studio-layout-container {
-                grid-template-columns: 55px 1fr 55px; 
-                gap: 10px; 
-                margin-top: 0px; 
+                grid-template-columns: 55px 140px 75px; 
+                gap: 12px; 
+                margin-top: 2px; 
                 justify-content: center; 
-                align-items: center;
+                align-content: center; 
                 width: 100%;
-                height: calc(100% - 40px); /* เหลือพื้นที่ให้ปุ่มด้านล่าง */
             }
+            .studio-center-col { display: flex; justify-content: center; align-items: center; width: 100%; }
+            .canvas-container { width: 140px; height: 140px; margin: 0 auto; } 
             
-            /* บังคับ Canvas ให้อยู่จุดกึ่งกลางของ Panel พอดีในแกน X */
-            .studio-center-col { 
-                width: 100%; 
-                display: flex; 
-                justify-content: center; 
-                align-items: center; 
-            }
-            .canvas-container { 
-                width: 115px; 
-                height: 115px; 
-                margin: 0 auto; 
-            } 
-            
-            /* ย่อขนาดเครื่องมือซ้าย-ขวาเพื่อให้สมดุลกับ Canvas ตรงกลาง */
             .tools-grid-3x2 { gap: 4px; }
-            .tool-btn-outline { height: 26px; padding: 2px; }
-            .tool-btn-outline svg { width: 14px; height: 14px; }
-            .line-size-horiz { margin-top: 3px; gap: 2px; }
-            .line-dot-opt { height: 18px; }
-            
-            .studio-right-col { gap: 4px; font-size: 0.7rem; align-items: center; }
-            .color-picker-wrapper { gap: 1px; text-align: center; width: 100%; }
-            .color-picker-circle-row { justify-content: center; gap: 3px; }
-            .circle-color-picker { width: 18px; height: 18px; }
-            .color-checkbox { width: 12px; height: 12px; }
-
-            /* แถบปุ่มจัดการชั้น Canvas ด้านล่างสุด */
-            .canvas-actions-row { margin-top: 4px; gap: 6px; align-items: center; justify-content: center; }
-            .canvas-actions-row .btn-outline { padding: 4px 10px; height: 28px; }
+            .tool-btn-outline { height: 26px; }
+            .line-size-horiz { margin-top: 2px; }
+            .line-dot-opt { height: 20px; }
+            .studio-right-col { gap: 4px; font-size: 0.72rem; }
+            .circle-color-picker { width: 20px; height: 20px; }
+            .canvas-actions-row { margin-top: 6px; gap: 4px; justify-content: center; }
+            .canvas-actions-row .btn-outline { padding: 4px; height: 28px; }
             .canvas-actions-row .btn-outline svg { width: 14px; height: 14px; }
-            #tileImageUpload { font-size: 0.7rem; margin-bottom: 2px; padding: 2px 0; }
 
-            /* Navigation bar */
+            /* แถบนำทางด้านล่างแบบ Fixed อยู่กับที่เสมอกับตำแหน่งท้ายจอ */
             .mobile-nav-bar {
                 display: flex; position: fixed; bottom: 0; left: 0; width: 100vw; height: 60px;
                 background: #f8fafc; border-top: 1px solid #e2e8f0; z-index: 1002;
@@ -374,14 +350,13 @@
             .nav-tab-item svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
             .nav-tab-item.active { color: var(--text-color); background: #ffffff; font-weight: 600; }
 
+            /* จัดปุ่มเปิด/ปิดถาดเครื่องมือให้อยู่จุดกึ่งกลางด้านล่างจอพอดีเหนือแถมเมนูหลัก */
             .mobile-toggle-panel-btn {
-                display: flex; position: fixed; bottom: 290px; left: 50%; transform: translateX(-50%); z-index: 1005;
-                background: #ffffff; color: var(--text-color); border: 1px solid #e2e8f0; width: 50px; height: 24px;
-                border-radius: 12px 12px 0 0; border-bottom: none; box-shadow: 0 -3px 6px rgba(0,0,0,0.03); align-items: center; justify-content: center; cursor: pointer;
-                transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                display: flex; position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); z-index: 1005;
+                background: #ffffff; color: var(--text-color); border: 1px solid #cbd5e1; width: 50px; height: 20px;
+                border-radius: 10px 10px 0 0; border-bottom: none; box-shadow: 0 -2px 5px rgba(0,0,0,0.05); align-items: center; justify-content: center; cursor: pointer;
             }
-            .tools-panel.collapsed + .mobile-toggle-panel-btn { bottom: 60px; border-bottom: 1px solid #e2e8f0; border-radius: 12px 12px 12px 12px; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); }
-            .mobile-toggle-panel-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.3s; }
+            .mobile-toggle-panel-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.2s; }
         }
     </style>
 </head>
@@ -393,8 +368,8 @@
     </header>
 
    <div class="upload-zone">
-        <strong>Upload Image Asset</strong><br>
-        <small>Click Layout Card to Enter Edit Mode</small>
+        <strong>Upload Image Asset</strong>
+        <small style="display:block; margin-bottom:5px; font-weight:600;">Click Layout Card to Enter Edit Mode</small>
         <div class="upload-actions">
             <input type="file" id="globalImageUpload" accept="image/*">
             <button class="btn-outline" id="btnClearToP" style="font-size: 0.85rem; padding: 6px 12px;">Reset Image to Default</button>
@@ -450,6 +425,7 @@
                 </div>
 
                 <div class="tool-group active-tab" id="tabGridExpansion">
+                    <h4>Grid Expansion Setting</h4>
                     <div class="tool-row">
                         <label>Grid Columns</label>
                         <input type="range" id="gridCols" value="8" min="1" max="30">
@@ -468,8 +444,8 @@
                 </div>
 
                 <div class="tool-group" id="tabTileStudio">
-                    <div class="tool-row" style="margin-bottom:2px;">
-                        <input type="file" id="tileImageUpload" accept="image/*" style="width:100%;">
+                    <div class="tool-row" style="margin-bottom:8px;">
+                        <input type="file" id="tileImageUpload" accept="image/*" style="font-size: 0.8rem; width:100%;">
                     </div>
                     
                     <div class="studio-layout-container">
@@ -649,7 +625,6 @@
     let selectedLineWidth = 6;
     let cropper = null; 
 
-    // Canvas Engine State
     const canvas = document.getElementById('tileCanvas');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
@@ -659,11 +634,13 @@
     let isCtrlPressed = false;
     let canvasSnapshot = null;
 
-    // Zoom/Pan Matrix Controls
     let scale = 1;
     let panX = 0, panY = 0;
     let isPanning = false;
     let startPanX = 0, startPanY = 0;
+    
+    // ตัวแปรสำหรับประมวลผล Pinch Zoom บน Mobile / Tablet
+    let initialTouchDist = -1;
 
     function init() {
         generateExplorerGrid();
@@ -1026,6 +1003,7 @@
         document.getElementById('btnRedo').onclick = () => { if(historyStep < drawingHistory.length - 1) { historyStep++; restoreCanvasStep(); } };
         document.getElementById('btnClearCanvas').onclick = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); saveCanvasState(); updateTilesFromCanvas(); };
 
+        /* --- [2] กลไกการเคลื่อนไหวแบบอิสระบน Preview Area (Zoom In / Out และ Pan) สำหรับ Mobile --- */
         const previewArea = document.getElementById('previewArea');
         previewArea.addEventListener('wheel', (e) => {
             e.preventDefault();
@@ -1049,24 +1027,46 @@
         });
         window.addEventListener('mouseup', () => { isPanning = false; });
 
+        // รองรับการสัมผัสแบบ Multi-touch (ถ่างนิ้ว / หุบนิ้วเพื่อซูมเลย์เอาต์)
         previewArea.addEventListener('touchstart', function(e) {
-            isPanning = true;
-            const touch = e.touches[0];
-            startPanX = touch.clientX - panX; startPanY = touch.clientY - panY;
+            if (e.touches.length === 2) {
+                isPanning = false;
+                initialTouchDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            } else if (e.touches.length === 1) {
+                isPanning = true;
+                const touch = e.touches[0];
+                startPanX = touch.clientX - panX; startPanY = touch.clientY - panY;
+            }
         }, { passive: true });
 
         previewArea.addEventListener('touchmove', function(e) {
-            if (!isPanning) return;
-            const touch = e.touches[0];
-            let targetX = touch.clientX - startPanX;
-            let targetY = touch.clientY - startPanY;
-            const maxW = window.innerWidth * 0.8; const maxH = window.innerHeight * 0.8;
-            panX = Math.min(Math.max(-maxW, targetX), maxW);
-            panY = Math.min(Math.max(-maxH, targetY), maxH);
-            applyTransform();
+            if (e.touches.length === 2 && initialTouchDist > 0) {
+                const currentDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const diff = currentDist / initialTouchDist;
+                scale = Math.min(Math.max(0.3, scale * (diff > 1 ? 1.04 : 0.96)), 4);
+                initialTouchDist = currentDist;
+                applyTransform();
+            } else if (isPanning && e.touches.length === 1) {
+                const touch = e.touches[0];
+                let targetX = touch.clientX - startPanX;
+                let targetY = touch.clientY - startPanY;
+                const maxW = window.innerWidth * 0.8; const maxH = window.innerHeight * 0.8;
+                panX = Math.min(Math.max(-maxW, targetX), maxW);
+                panY = Math.min(Math.max(-maxH, targetY), maxH);
+                applyTransform();
+            }
         }, { passive: true });
 
-        previewArea.addEventListener('touchend', function() { isPanning = false; });
+        previewArea.addEventListener('touchend', function(e) { 
+            if (e.touches.length < 2) initialTouchDist = -1;
+            if (e.touches.length === 0) isPanning = false; 
+        }, { passive: true });
 
         document.getElementById('btnResetZoom').onclick = (e) => {
             e.stopPropagation(); scale = 1; panX = 0; panY = 0; applyTransform();
