@@ -303,7 +303,7 @@
             #headerLayoutSelectWrapper { display: flex !important; visibility: visible !important; width: auto; max-width: 55%; }
             #headerLayoutSelectWrapper select { height: 36px; padding: 4px 8px; font-size: 0.85rem; border-radius: 6px; }
 
-            /* ซ่อนปุ่ม Toggle Fullscreen ในหน้า Crop บน Mobile */
+            /* ซ่อนปุ่ม Toggle Fullscreen ในโหมดโมบายล์ */
             #btnToggleFullscreen { display: none !important; }
 
             /* Bottom Panel System */
@@ -987,11 +987,10 @@
             const cropBox = document.querySelector('.crop-box');
             const cropImg = document.getElementById('cropImageTag');
             
-            // สลับคลาสโหมด Fullscreen
             cropBox.classList.toggle('fullscreen');
             
-            // การทำลายและสร้างใหม่แก้ปัญหาเรื่องรูปเลื่อนหายหรือเบี้ยวได้อย่างเด็ดขาดที่สุด
             if (cropper) {
+                // ทำลาย Instance เก่าทิ้ง และเปิดใหม่เพื่อให้ Cropper ทำการรังวัดคำนวณตำแหน่งกึ่งกลางตามสัดส่วนพื้นที่ใหม่
                 cropper.destroy();
                 setTimeout(() => {
                     initCropper(cropImg);
