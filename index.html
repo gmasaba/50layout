@@ -303,6 +303,9 @@
             #headerLayoutSelectWrapper { display: flex !important; visibility: visible !important; width: auto; max-width: 55%; }
             #headerLayoutSelectWrapper select { height: 36px; padding: 4px 8px; font-size: 0.85rem; border-radius: 6px; }
 
+            /* ซ่อนไอคอนขยายเต็มจอในหน้า Crop บนมือถือ */
+            #btnToggleFullscreen { display: none !important; }
+
             /* Bottom Panel System */
             .tools-panel {
                 width: 100% !important; min-width: 100% !important;
@@ -572,7 +575,7 @@
         { id: 6, title: "6. Alternating 180 (Inverted Row-Spin)", desc: "Alternating rows flip entirely upside down at 180 degrees, allowing complex boundaries to interlock tightly.", matrix: ["n","n","n","n","n","n","r180","r180","r180","r180","r180","r180","n","n","n","n","n","n","r180","r180","r180","r180","r180","r180"] },
         { id: 7, title: "7. Brick Wall Slide (Offset 180 Rotation)", desc: "Offsets successive horizontal bricks combined with a 180-degree flip to add dynamic staggered depth.", matrix: ["n","r180","n","r180","n","r180","r180","n","r180","n","r180","n","n","r180","n","r180","n","r180","r180","n","r180","n","r180","n"] },
         { id: 8, title: "8. Herringbone Rotate (Perpendicular Twill)", desc: "Swaps 90-degree rotations in pairs to construct iconic woven herringbone styles spinning infinitely.", matrix: ["n","r90","n","r90","n","r90","n","r90","n","r90","n","r90","r90","n","r90","n","r90","n","r90","n","r90","n","r90","n"] },
-        { id: 9, title: "9. Cross Mirror (4-Directional Hub)", desc: "Utilizes crossed mirrored matrices inside 2x2 grids to map quad-balanced nodes.", matrix: ["n","mx","my","mxy","n","mx","my","mxy","n","mx","my","mxy","n","mx","my","mxy","n","mx","my","mxy","n","mx","my","mxy"] },
+        { id: 9, title: "9. Cross Mirror (4-DirectionAL Hub)", desc: "Utilizes crossed mirrored matrices inside 2x2 grids to map quad-balanced nodes.", matrix: ["n","mx","my","mxy","n","mx","my","mxy","n","mx","my","mxy","n","mx","my","mxy","n","mx","my","mxy","n","mx","my","mxy"] },
         { id: 10, title: "10. Basketweave Layout (Intertwined Pairs)", desc: "Groups twin upright tiles abutting twin horizontal units to emulate classic wicker basket arrays.", matrix: ["n","n","r90","r90","n","n","n","n","r90","r90","n","n","r90","r90","n","n","r90","r90","r90","r90","n","n","r90","r90"] },
         { id: 11, title: "11. Windmill Spin", desc: "Alternates between clockwise and counter-clockwise rotations across diagonal axes.", matrix: ["n","r90","r270","n","n","r90","r270","n","n","r90","r270","n","n","r90","r270","n","n","r90","r270","n","n","r90","r270","n"] },
         { id: 12, title: "12. Double Mirror Horizontal", desc: "Mirrors horizontally on every two blocks, lengthening the horizontal rhythm of designs.", matrix: ["n","n","mx","mx","n","n","n","n","mx","mx","n","n","n","n","mx","mx","n","n","n","n","mx","mx","n","n"] },
@@ -982,14 +985,15 @@
         document.getElementById('btnToggleFullscreen').onclick = () => {
             if (window.innerWidth <= 991) return;
             const cropBox = document.querySelector('.crop-box');
+            const cropImg = document.getElementById('cropImageTag');
             
             cropBox.classList.toggle('fullscreen');
             
+            // ทำลายออบเจกต์และจัดโครงสร้าง Cropper ใหม่ทับลงไป เพื่อบังคับคำนวณ Container ศูนย์กลางกล่องให้พอดีใหม่เสมอ
             if (cropper) {
-                // บังคับให้ Cropper ตรวจสอบสัดส่วนพื้นที่ Container ใหม่หลังจากสลับ Class CSS
+                cropper.destroy();
                 setTimeout(() => {
-                    cropper.resize();
-                    cropper.reset(); // รีเซ็ตตำแหน่งกล่องครอปและรูปภาพให้อยู่ตรงกึ่งกลางเสมอ
+                    initCropper(cropImg);
                 }, 60);
             }
         };
