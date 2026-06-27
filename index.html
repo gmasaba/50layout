@@ -275,13 +275,14 @@
         }
         .crop-box.fullscreen {
             max-width: 100% !important; width: 100vw !important; height: 100vh !important; 
-            border-radius: 0 !important; padding: 15px !important;
+            border-radius: 0 !important; padding: 20px !important; justify-content: center;
         }
         .crop-preview-container { 
             height: 380px; max-height: 380px; margin: 15px 0; background: #eee; position: relative; overflow: hidden; 
+            width: 100%; display: flex; align-items: center; justify-content: center;
         }
         .crop-box.fullscreen .crop-preview-container {
-            flex: 1 !important; height: auto !important; max-height: none !important;
+            flex: 1 !important; height: 0 !important; max-height: none !important; margin: 20px 0;
         }
         #cropImageTag { max-width: 100%; display: block; }
 
@@ -943,8 +944,8 @@
             viewMode: 1,
             background: true,
             autoCropArea: 0.8,
-            dragMode: 'move', // เปิดใช้งานโหมดคลิกลากย้ายภาพ (Pan)
-            zoomable: true,   // เปิดใช้งานการซูมด้วย Mouse Wheel
+            dragMode: 'move',
+            zoomable: true,
             scalable: true
         });
     }
@@ -968,7 +969,6 @@
                 const cropImg = document.getElementById('cropImageTag');
                 cropImg.src = dataUrl;
                 
-                // คืนค่ารูปแบบของหน้าต่าง Crop Box ให้เป็นปกติ (ย่อ) ทุกครั้งที่เริ่มโหลดภาพใหม่
                 const cropBox = document.querySelector('.crop-box');
                 cropBox.classList.remove('fullscreen');
 
@@ -979,43 +979,23 @@
             });
         });
 
-        // จัดการระบบสลับปุ่ม Fullscreen / Normal Screen ของ Crop Box เฉพาะโหมด Desktop
         document.getElementById('btnToggleFullscreen').onclick = () => {
-            if (window.innerWidth <= 991) return; // ทำงานเฉพาะเวอชั่นเดสท้อป
+            if (window.innerWidth <= 991) return;
             const cropBox = document.querySelector('.crop-box');
-            const cropImg = document.getElementById('cropImageTag');
             
-            // สลับคลาสฟูลสกรีน
             cropBox.classList.toggle('fullscreen');
             
-            // รีเซ็ต Cropper ใหม่เพื่อคำนวณสเกลพื้นที่ของหน้าจอตามจริง (ป้องกันภาพเบี้ยว/หลุดขอบ)
             if (cropper) {
-                const cropData = cropper.getData();
-                cropper.destroy();
+                // บังคับให้ Cropper ตรวจสอบสัดส่วนพื้นที่ Container ใหม่หลังจากสลับ Class CSS
                 setTimeout(() => {
-                    cropper = new Cropper(cropImg, {
-                        aspectRatio: 1,
-                        viewMode: 1,
-                        background: true,
-                        autoCropArea: 0.8,
-                        dragMode: 'move',
-                        zoomable: true,
-                        scalable: true,
-                        ready: function() {
-                            // หากสลับเป็นหน้าต่างย่อ ให้คงพิกัดกล่องครอปให้อยู่จุดศูนย์กลางเดิมเหมือนเริ่มอัปโหลด
-                            if (!cropBox.classList.contains('fullscreen')) {
-                                cropper.reset();
-                            } else {
-                                cropper.setData(cropData);
-                            }
-                        }
-                    });
-                }, 50);
+                    cropper.resize();
+                    cropper.reset(); // รีเซ็ตตำแหน่งกล่องครอปและรูปภาพให้อยู่ตรงกึ่งกลางเสมอ
+                }, 60);
             }
         };
 
         function resetFileInput() {
-            fileInput.value = ""; // เคลียร์ค่าตัวแปรเพื่อให้สามารถอัพโหลดรูปเดิมซ้ำได้
+            fileInput.value = "";
         }
 
         document.getElementById('btnCropSquare').onclick = () => {
