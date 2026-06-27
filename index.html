@@ -263,28 +263,28 @@
         
         #headerLayoutSelectWrapper { display: flex; flex: 1; justify-content: center; padding: 0 10px; }
 
-        /* --- Crop Modal & Fullscreen Layout --- */
+        /* --- Crop Modal Layer Styles --- */
         #cropModal {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;
         }
         .crop-box { 
             background: white; padding: 20px; border-radius: 12px; max-width: 600px; width: 90%; text-align: center;
-            transition: all 0.25s ease-in-out; display: flex; flex-direction: column;
+            display: flex; flex-direction: column; transition: all 0.3s ease;
         }
-        .crop-box.fullscreen {
-            width: 100vw !important; height: 100vh !important; max-width: 100vw !important; max-height: 100vh !important;
-            border-radius: 0 !important; padding: 25px !important;
-        }
-        .crop-preview-container { max-height: 400px; margin: 15px 0; background: #eee; position: relative; overflow: hidden; flex: 1; }
-        .crop-box.fullscreen .crop-preview-container { max-height: none !important; }
+        .crop-preview-container { height: 400px; margin: 15px 0; background: #eee; position: relative; overflow: hidden; }
         #cropImageTag { max-width: 100%; display: block; }
 
-        /* Isolation for file input to prevent accidental overlapping triggers */
-        #tileImageUpload {
-            max-width: 100%;
-            overflow: hidden;
-            position: relative;
+        /* Fullscreen variant for Desktop View */
+        .crop-box.fullscreen {
+            max-width: 95vw !important;
+            width: 95vw !important;
+            height: 92vh !important;
+            max-height: 92vh !important;
+        }
+        .crop-box.fullscreen .crop-preview-container {
+            flex: 1;
+            height: auto !important;
         }
 
         /* ==========================================================================
@@ -447,7 +447,7 @@
                         <input type="file" id="tileImageUpload" accept="image/*" style="font-size: 0.8rem; width:100%;">
                     </div>
                     
-                    <div class="studio-layout-container" id="studioLayoutContainer">
+                    <div class="studio-layout-container">
                         
                         <div class="studio-left-col">
                             <div class="tools-grid-3x2" id="toolsGrid">
@@ -479,7 +479,7 @@
                         </div>
 
                         <div class="studio-center-col">
-                            <div class="canvas-container" id="canvasContainerBox">
+                            <div class="canvas-container">
                                 <canvas id="tileCanvas" width="240" height="240"></canvas>
                             </div>
                         </div>
@@ -547,18 +547,13 @@
 
 <div id="cropModal">
     <div class="crop-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
-            <h3 style="margin:0; font-size:1.1rem; color:var(--primary-color);">Adjust Image Area Selection</h3>
-            <button class="btn-outline" id="btnToggleCropFullscreen" title="Toggle Fullscreen" style="padding: 4px 8px; font-size: 0.8rem;">
-                <svg viewBox="0 0 24 24" style="width:16px; height:16px; stroke-width:2.5;"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                <span style="margin-left:4px; font-weight:600;">Fullscreen</span>
-            </button>
-        </div>
-        <p style="font-size:0.85rem; color:#64748b; margin: 10px 0 5px 0; text-align: left;">An uploaded image asset is detected. Adjust the box to select and scale your square section.</p>
+        <h3>Adjust Image Area Selection</h3>
+        <p style="font-size:0.85rem; color:#64748b;">An uploaded image asset is detected. Adjust the box to select and scale your square section.</p>
         <div class="crop-preview-container">
             <img id="cropImageTag" src="" alt="preview">
         </div>
-        <div style="display:flex; gap:10px; justify-content: center; padding-top: 5px;">
+        <div style="display:flex; gap:10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-outline" id="btnToggleCropFullscreen" style="background:#4b5563; color:white;">Toggle Fullscreen</button>
             <button class="btn-outline" id="btnCropSquare" style="background:var(--primary-color); color:white;">Confirm Square Crop (1:1)</button>
             <button class="btn-outline" id="btnCropNone">Keep Original Aspect (Stretch/Fit)</button>
         </div>
@@ -958,23 +953,43 @@
             handleImageUpload(e, (dataUrl) => {
                 const cropImg = document.getElementById('cropImageTag');
                 cropImg.src = dataUrl;
-                document.querySelector('.crop-box').classList.remove('fullscreen'); // reset states
+                
+                // Reset Fullscreen status when opening a new image
+                document.querySelector('.crop-box').classList.remove('fullscreen');
                 document.getElementById('cropModal').style.display = 'flex';
+                
                 if (cropper) cropper.destroy();
                 setTimeout(() => {
-                    cropper = new Cropper(cropImg, { aspectRatio: 1, viewMode: 1, background: true });
+                    cropper = new Cropper(cropImg, { 
+                        aspectRatio: 1, 
+                        viewMode: 1, 
+                        background: true,
+                        autoCropArea: 0.8
+                    });
                 }, 50);
             });
         });
 
-        // Toggle Fullscreen inside the Crop Modal
-        document.getElementById('btnToggleCropFullscreen').onclick = (e) => {
-            e.stopPropagation();
-            const cropBox = document.querySelector('.crop-box');
-            cropBox.classList.toggle('fullscreen');
+        // Toggle Fullscreen inside the Crop Modal (Only for Desktop view adjustment)
+        document.getElementById('btnToggleCropFullscreen').onclick = () => {
+            const box = document.querySelector('.crop-box');
+            box.classList.toggle('fullscreen');
             if (cropper) {
-                // Let cropperjs recalculate dimensions properly on animation end
-                setTimeout(() => { cropper.resize(); }, 150);
+                // Destroy and recreate cropper instance to adjust and fit the new layout boundaries properly
+                const cropImg = document.getElementById('cropImageTag');
+                const cropData = cropper.getData();
+                cropper.destroy();
+                setTimeout(() => {
+                    cropper = new Cropper(cropImg, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        background: true,
+                        data: cropData,
+                        ready() {
+                            cropper.setData(cropData);
+                        }
+                    });
+                }, 50);
             }
         };
 
@@ -1043,10 +1058,6 @@
 
         window.addEventListener('keydown', (e) => { if(e.key === 'Control') isCtrlPressed = true; });
         window.addEventListener('keyup', (e) => { if(e.key === 'Control') isCtrlPressed = false; });
-
-        // Stop propagation to prevent accidental ghost clicks to other file inputs/zones
-        document.getElementById('toolsPanel').addEventListener('mousedown', (e) => { e.stopPropagation(); });
-        document.getElementById('toolsPanel').addEventListener('click', (e) => { e.stopPropagation(); });
 
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
