@@ -919,11 +919,6 @@
     }
 
     function bindEvents() {
-        // บล็อกไม่ให้ Event หลุดลอยไปถึงหน้าหลักเมื่อกดปุ่มหรือใช้งานพาเนลด้านขวา
-        document.getElementById('toolsPanel').onclick = (e) => {
-            e.stopPropagation();
-        };
-
         window.addEventListener('popstate', (e) => {
             if(document.getElementById('editorView').style.display === 'block') {
                 e.preventDefault();
@@ -931,8 +926,7 @@
             }
         });
 
-        document.getElementById('btnClearToP').onclick = (e) => {
-            e.stopPropagation(); // หยุดการส่งต่อ Event
+        document.getElementById('btnClearToP').onclick = () => {
             currentImageUrl = "";
             generateExplorerGrid();
         };
@@ -949,8 +943,7 @@
             });
         });
 
-        document.getElementById('btnCropSquare').onclick = (e) => {
-            e.stopPropagation();
+        document.getElementById('btnCropSquare').onclick = () => {
             if (!cropper) return;
             const croppedCanvas = cropper.getCroppedCanvas({ width: canvas.width, height: canvas.height });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -960,8 +953,7 @@
             cropper.destroy(); cropper = null;
         };
 
-        document.getElementById('btnCropNone').onclick = (e) => {
-            e.stopPropagation();
+        document.getElementById('btnCropNone').onclick = () => {
             document.getElementById('cropModal').style.display = 'none';
             const originalSrc = document.getElementById('cropImageTag').src;
             if (cropper) { cropper.destroy(); cropper = null; }
@@ -974,8 +966,7 @@
             img.src = originalSrc;
         };
 
-        document.getElementById('btnResetToP').onclick = (e) => {
-            e.stopPropagation();
+        document.getElementById('btnResetToP').onclick = () => {
             drawingHistory = []; historyStep = -1;
             setupCanvasDefault(); updateTilesFromCanvas();
         };
@@ -987,7 +978,7 @@
             generateExplorerGrid();
         }
 
-        document.getElementById('btnBack').onclick = (e) => { e.stopPropagation(); closeEditorRoutine(); };
+        document.getElementById('btnBack').onclick = () => { closeEditorRoutine(); };
 
         document.getElementById('layoutSelect').onchange = (e) => {
             const found = patternsData.find(p => p.id == e.target.value);
@@ -1008,8 +999,7 @@
             renderTessellation();
         };
 
-        document.getElementById('btnBucketTool').onclick = (e) => {
-            e.stopPropagation();
+        document.getElementById('btnBucketTool').onclick = () => {
             document.querySelectorAll('.tool-btn-outline').forEach(b => b.classList.remove('active'));
             document.getElementById('btnBucketTool').classList.add('active');
             selectedTool = 'fill';
@@ -1056,7 +1046,8 @@
             let targetX = e.clientX - startPanX;
             let targetY = e.clientY - startPanY;
             
-            const maxW = window.innerWidth * 0.4;maxH = window.innerHeight * 0.4;
+            const maxW = window.innerWidth * 0.4; 
+            const maxH = window.innerHeight * 0.4;
             panX = Math.min(Math.max(-maxW, targetX), maxW);
             panY = Math.min(Math.max(-maxH, targetY), maxH);
             applyTransform();
@@ -1083,7 +1074,8 @@
                 let targetX = touch.clientX - startPanX;
                 let targetY = touch.clientY - startPanY;
                 
-                const maxW = window.innerWidth * 0.4;maxH = window.innerHeight * 0.4;
+                const maxW = window.innerWidth * 0.4; 
+                const maxH = window.innerHeight * 0.4;
                 panX = Math.min(Math.max(-maxW, targetX), maxW);
                 panY = Math.min(Math.max(-maxH, targetY), maxH);
                 applyTransform();
@@ -1192,7 +1184,6 @@
     function updateTilesFromCanvas() { renderTessellation(); }
 
     function startDrawing(e) {
-        e.stopPropagation(); // หยุดสัญญาณไม่ให้ Bubble ขึ้นไปข้างบน
         const rect = canvas.getBoundingClientRect();
         startX = (e.clientX - rect.left) * (canvas.width / rect.width);
         startY = (e.clientY - rect.top) * (canvas.height / rect.height);
@@ -1216,7 +1207,6 @@
     }
 
     function draw(e) {
-        e.stopPropagation();
         if (!isDrawing) return;
         const rect = canvas.getBoundingClientRect();
         const currentX = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -1253,13 +1243,7 @@
         updateTilesFromCanvas();
     }
 
-    function stopDrawing(e) { 
-        e.stopPropagation();
-        if (!isDrawing) return; 
-        isDrawing = false; 
-        saveCanvasState(); 
-    }
-    
+    function stopDrawing() { if (!isDrawing) return; isDrawing = false; saveCanvasState(); }
     function saveCanvasState() {
         if (historyStep < drawingHistory.length - 1) drawingHistory = drawingHistory.slice(0, historyStep + 1);
         drawingHistory.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
