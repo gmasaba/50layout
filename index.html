@@ -943,8 +943,8 @@
             viewMode: 1,
             background: true,
             autoCropArea: 0.8,
-            dragMode: 'move',
-            zoomable: true,
+            dragMode: 'move', // เปิดใช้งานโหมดคลิกลากย้ายภาพ (Pan)
+            zoomable: true,   // เปิดใช้งานการซูมด้วย Mouse Wheel
             scalable: true
         });
     }
@@ -968,6 +968,7 @@
                 const cropImg = document.getElementById('cropImageTag');
                 cropImg.src = dataUrl;
                 
+                // คืนค่ารูปแบบของหน้าต่าง Crop Box ให้เป็นปกติ (ย่อ) ทุกครั้งที่เริ่มโหลดภาพใหม่
                 const cropBox = document.querySelector('.crop-box');
                 cropBox.classList.remove('fullscreen');
 
@@ -980,15 +981,16 @@
 
         // จัดการระบบสลับปุ่ม Fullscreen / Normal Screen ของ Crop Box เฉพาะโหมด Desktop
         document.getElementById('btnToggleFullscreen').onclick = () => {
-            if (window.innerWidth <= 991) return; 
+            if (window.innerWidth <= 991) return; // ทำงานเฉพาะเวอชั่นเดสท้อป
             const cropBox = document.querySelector('.crop-box');
             const cropImg = document.getElementById('cropImageTag');
             
             // สลับคลาสฟูลสกรีน
             cropBox.classList.toggle('fullscreen');
             
+            // รีเซ็ต Cropper ใหม่เพื่อคำนวณสเกลพื้นที่ของหน้าจอตามจริง (ป้องกันภาพเบี้ยว/หลุดขอบ)
             if (cropper) {
-                // ทำลาย instance เก่าและสร้างใหม่ทันที เพื่อบังคับให้ Cropper.js คำนวณขอบเขต Container ตาม CSS ล่าสุด
+                const cropData = cropper.getData();
                 cropper.destroy();
                 setTimeout(() => {
                     cropper = new Cropper(cropImg, {
@@ -1000,8 +1002,12 @@
                         zoomable: true,
                         scalable: true,
                         ready: function() {
-                            // สั่งให้รีเซ็ตการแสดงผลกลับมาอยู่กึ่งกลางกล่องย่ออย่างถูกต้อง ไม่เลื่อนหาย
-                            cropper.reset(); 
+                            // หากสลับเป็นหน้าต่างย่อ ให้คงพิกัดกล่องครอปให้อยู่จุดศูนย์กลางเดิมเหมือนเริ่มอัปโหลด
+                            if (!cropBox.classList.contains('fullscreen')) {
+                                cropper.reset();
+                            } else {
+                                cropper.setData(cropData);
+                            }
                         }
                     });
                 }, 50);
@@ -1009,7 +1015,7 @@
         };
 
         function resetFileInput() {
-            fileInput.value = ""; 
+            fileInput.value = ""; // เคลียร์ค่าตัวแปรเพื่อให้สามารถอัพโหลดรูปเดิมซ้ำได้
         }
 
         document.getElementById('btnCropSquare').onclick = () => {
