@@ -194,7 +194,7 @@
 
         .tool-group { margin-bottom: 20px; display: none; }
         .tool-group.active-tab { display: block; }
-        .tool-group.active-tab { display: block; }
+        .tool-group h4 { margin-top: 0; margin-bottom: 15px; color: var(--primary-color); }
         .tool-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         .tool-row label { font-size: 0.85rem; width: 100px; color: #64748b; flex-shrink: 0; }
         .tool-row input[type="range"] { flex: 1; }
@@ -967,10 +967,11 @@
             img.src = originalSrc;
         };
 
-        document.getElementById('btnResetToP').onclick = () => {
-            drawingHistory = []; historyStep = -1;
-            setupCanvasDefault(); updateTilesFromCanvas();
-        };
+        // ผูกปุ่ม Undo, Redo, Clear Canvas, และ Reset Blueprint ในหน้า Edit
+        document.getElementById('btnUndo').onclick = () => { if (historyStep > 0) { historyStep--; restoreCanvasStep(); } };
+        document.getElementById('btnRedo').onclick = () => { if (historyStep < drawingHistory.length - 1) { historyStep++; restoreCanvasStep(); } };
+        document.getElementById('btnClearCanvas').onclick = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); saveCanvasState(); updateTilesFromCanvas(); };
+        document.getElementById('btnResetToP').onclick = () => { drawingHistory = []; historyStep = -1; setupCanvasDefault(); updateTilesFromCanvas(); };
 
         function closeEditorRoutine() {
             currentImageUrl = canvas.toDataURL();
