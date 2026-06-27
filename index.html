@@ -271,18 +271,18 @@
         .crop-box { 
             background: white; padding: 20px; border-radius: 12px; max-width: 600px; width: 90%; 
             text-align: center; position: relative; display: flex; flex-direction: column;
-            transition: all 0.2s ease-in-out;
+            transition: all 0.15s ease-in-out;
         }
         .crop-box.fullscreen {
             max-width: 100% !important; width: 100vw !important; height: 100vh !important; 
             border-radius: 0 !important; padding: 20px !important; justify-content: center;
         }
         .crop-preview-container { 
-            height: 380px; max-height: 380px; margin: 15px 0; background: #eee; position: relative; overflow: hidden; 
+            height: 380px; min-height: 380px; max-height: 380px; margin: 15px 0; background: #eee; position: relative; overflow: hidden; 
             width: 100%; display: flex; align-items: center; justify-content: center;
         }
         .crop-box.fullscreen .crop-preview-container {
-            flex: 1 !important; height: 0 !important; max-height: none !important; margin: 20px 0;
+            flex: 1 !important; height: 0 !important; max-height: none !important; min-height: 0 !important; margin: 20px 0;
         }
         #cropImageTag { max-width: 100%; display: block; }
 
@@ -554,7 +554,7 @@
         </button>
         <h3>Adjust Image Area Selection</h3>
         <p style="font-size:0.85rem; color:#64748b;">An uploaded image asset is detected. Adjust the box to select and scale your square section.</p>
-        <div class="crop-preview-container">
+        <div class="crop-preview-container" id="cropContainer">
             <img id="cropImageTag" src="" alt="preview">
         </div>
         <div style="display:flex; gap:10px; justify-content: center; margin-top: auto;">
@@ -623,6 +623,7 @@
     let selectedTool = "brush";
     let selectedLineWidth = 6;
     let cropper = null; 
+    let cachedSourceBase64 = ""; // เก็บค่ารูปภาพต้นฉบับไว้สำหรับการล้าง DOM ตอนกดสลับหน้าจอ
 
     // Canvas Engine State
     const canvas = document.getElementById('tileCanvas');
@@ -940,9 +941,21 @@
         }, 60);
     }
 
-    function initCropper(imgElement) {
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(imgElement, {
+    // สร้างระบบเคลียร์ภาพและสร้างแท็ก img ใหม่เข้าไปใน DOM เพื่อตัดขาดพิกัดเก่าแบบเบ็ดเสร็จ
+    function forceRebuildCropperDOM() {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        const container = document.getElementById('cropContainer');
+        container.innerHTML = ""; 
+        
+        const newImg = document.createElement('img');
+        newImg.id = "cropImageTag";
+        newImg.src = cachedSourceBase64;
+        container.appendChild(newImg);
+
+        cropper = new Cropper(newImg, {
             aspectRatio: 1,
             viewMode: 1,
             background: true,
@@ -969,15 +982,14 @@
         const fileInput = document.getElementById('tileImageUpload');
         fileInput.addEventListener('change', (e) => {
             handleImageUpload(e, (dataUrl) => {
-                const cropImg = document.getElementById('cropImageTag');
-                cropImg.src = dataUrl;
+                cachedSourceBase64 = dataUrl; // จัดเก็บเข้าแคชสำหรับกดย่อ/ขยายรูป
                 
                 const cropBox = document.querySelector('.crop-box');
                 cropBox.classList.remove('fullscreen');
 
                 document.getElementById('cropModal').style.display = 'flex';
                 setTimeout(() => {
-                    initCropper(cropImg);
+                    forceRebuildCropperDOM();
                 }, 50);
             });
         });
@@ -985,17 +997,14 @@
         document.getElementById('btnToggleFullscreen').onclick = () => {
             if (window.innerWidth <= 991) return;
             const cropBox = document.querySelector('.crop-box');
-            const cropImg = document.getElementById('cropImageTag');
             
+            // สลับสถานะโครงสร้างหน้าจอ
             cropBox.classList.toggle('fullscreen');
             
-            if (cropper) {
-                // ทำลาย Instance เก่าทิ้ง และเปิดใหม่เพื่อให้ Cropper ทำการรังวัดคำนวณตำแหน่งกึ่งกลางตามสัดส่วนพื้นที่ใหม่
-                cropper.destroy();
-                setTimeout(() => {
-                    initCropper(cropImg);
-                }, 60);
-            }
+            // บังคับชุบชีวิต DOM ของตัวประมวลผลรูปใหม่ทันที ป้องกันพิกัดแคชค้างส่งผลให้รูปเลื่อนหลุดสายตา
+            setTimeout(() => {
+                forceRebuildCropperDOM();
+            }, 50);
         };
 
         function resetFileInput() {
@@ -1009,13 +1018,13 @@
             ctx.drawImage(croppedCanvas, 0, 0, canvas.width, canvas.height);
             saveCanvasState(); updateTilesFromCanvas();
             document.getElementById('cropModal').style.display = 'none';
-            cropper.destroy(); cropper = null;
+            if (cropper) { cropper.destroy(); cropper = null; }
             resetFileInput();
         };
 
         document.getElementById('btnCropNone').onclick = () => {
             document.getElementById('cropModal').style.display = 'none';
-            const originalSrc = document.getElementById('cropImageTag').src;
+            const originalSrc = cachedSourceBase64;
             if (cropper) { cropper.destroy(); cropper = null; }
             const img = new Image();
             img.onload = function() {
