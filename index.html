@@ -195,7 +195,8 @@
         .tool-group { margin-bottom: 20px; display: none; }
         .tool-group.active-tab { display: block; }
         .tool-group h4 { margin-top: 0; margin-bottom: 15px; color: var(--primary-color); }
-        .tool-group tool-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+        .tool-group h4 { margin-top: 0; margin-bottom: 15px; color: var(--primary-color); }
+        .tool-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         .tool-row label { font-size: 0.85rem; width: 100px; color: #64748b; flex-shrink: 0; }
         .tool-row input[type="range"] { flex: 1; }
         .num-input { width: 60px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; }
@@ -267,34 +268,25 @@
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;
         }
-        .crop-box { 
-            background: white; padding: 20px; border-radius: 12px; max-width: 600px; width: 90%; text-align: center; 
-            position: relative; transition: all 0.3s ease; display: flex; flex-direction: column;
-        }
-        .crop-preview-container { height: 380px; margin: 15px 0; background: #eee; position: relative; overflow: hidden; flex-grow: 1; }
+        .crop-box { background: white; padding: 20px; border-radius: 12px; max-width: 600px; width: 90%; text-align: center; transition: all 0.3s ease; display: flex; flex-direction: column; }
+        .crop-preview-container { max-height: 400px; margin: 15px 0; background: #eee; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; flex: 1; }
         #cropImageTag { max-width: 100%; display: block; }
 
-        /* --- Desktop Maximize Feature for Crop Modal --- */
+        /* --- Desktop Fullscreen Mode CSS --- */
         @media (min-width: 992px) {
-            .crop-box.maximized {
-                width: 96vw !important;
-                height: 94vh !important;
-                max-width: none !important;
+            .crop-box.fullscreen {
+                max-width: 100% !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                border-radius: 0px !important;
                 padding: 15px !important;
             }
-            .crop-box.maximized .crop-preview-container {
-                height: calc(94vh - 140px) !important;
+            .crop-box.fullscreen .crop-preview-container {
+                max-height: none !important;
+                height: calc(100vh - 120px) !important;
+                margin: 10px 0 !important;
+                background: #11141a;
             }
-            .crop-maximize-btn {
-                position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid #cbd5e1;
-                border-radius: 6px; cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center;
-                transition: all 0.15s ease; color: var(--text-color);
-            }
-            .crop-maximize-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
-            .crop-maximize-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
-        }
-        @media (max-width: 991px) {
-            .crop-maximize-btn { display: none !important; }
         }
 
         /* ==========================================================================
@@ -557,15 +549,13 @@
 
 <div id="cropModal">
     <div class="crop-box" id="cropBoxContainer">
-        <button class="crop-maximize-btn" id="btnToggleMaximizeCrop" title="Toggle Fullscreen Mode">
-            <svg id="maximizeCropIcon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-        </button>
-        <h3>Adjust Image Area Selection</h3>
-        <p style="font-size:0.85rem; color:#64748b; margin: 0;">An uploaded image asset is detected. Adjust the box to select and scale your square section.</p>
+        <h3 id="cropModalTitle">Adjust Image Area Selection</h3>
+        <p id="cropModalDesc" style="font-size:0.85rem; color:#64748b;">An uploaded image asset is detected. Adjust the box to select and scale your square section.</p>
         <div class="crop-preview-container">
             <img id="cropImageTag" src="" alt="preview">
         </div>
-        <div style="display:flex; gap:10px; justify-content: center; z-index: 10;">
+        <div style="display:flex; gap:10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-outline" id="btnToggleFullscreen" style="display:none; background: #e2e8f0;">Maximize Fullscreen</button>
             <button class="btn-outline" id="btnCropSquare" style="background:var(--primary-color); color:white;">Confirm Square Crop (1:1)</button>
             <button class="btn-outline" id="btnCropNone">Keep Original Aspect (Stretch/Fit)</button>
         </div>
@@ -679,18 +669,23 @@
         const headerContainer = document.getElementById('headerLayoutSelectWrapper');
         const desktopPanelZone = document.getElementById('desktopSelectAnchor');
         const textLabels = document.querySelectorAll('.color-name-text');
+        const btnToggleFS = document.getElementById('btnToggleFullscreen');
 
         if (window.innerWidth <= 991) {
             headerContainer.appendChild(selectElement);
             textLabels.forEach(label => {
                 label.textContent = label.getAttribute('data-mobile');
             });
+            btnToggleFS.style.display = 'none';
+            // ปิดโหมด Fullscreen หากย่อจอลงมือถือ
+            document.getElementById('cropBoxContainer').classList.remove('fullscreen');
             adjustMobilePanelHeight();
         } else {
             desktopPanelZone.appendChild(selectElement);
             textLabels.forEach(label => {
                 label.textContent = label.getAttribute('data-desktop');
             });
+            btnToggleFS.style.display = 'inline-block';
             const panel = document.getElementById('toolsPanel');
             if(panel) panel.style.maxHeight = 'none';
         }
@@ -948,6 +943,29 @@
         }, 60);
     }
 
+    function initCropper(imgElement) {
+        if (cropper) cropper.destroy();
+        
+        // สำหรับ Desktop จะเปิดโหมดเลื่อน (Pan) และย่อขยาย (Zoom) บนภาพพื้นหลังได้ผ่าน mouse wheel/drag
+        const isDesktop = window.innerWidth > 991;
+        
+        cropper = new Cropper(imgElement, { 
+            aspectRatio: 1, 
+            viewMode: 1, 
+            background: true,
+            responsive: true,
+            restore: true,
+            checkCrossOrigin: false,
+            zoomable: isDesktop, // อนุญาตให้ซูมบนเดสท้อป
+            movable: isDesktop,  // อนุญาตให้แพนย้ายตำแหน่งบนเดสท้อป
+            toggleDragModeOnDblclick: isDesktop,
+            ready: function () {
+                // จัดให้กรอบ Crop และภาพอยู่กึ่งกลาง panel
+                cropper.center();
+            }
+        });
+    }
+
     function bindEvents() {
         window.addEventListener('popstate', (e) => {
             if(document.getElementById('editorView').style.display === 'block') {
@@ -961,44 +979,52 @@
             generateExplorerGrid();
         };
 
-        document.getElementById('tileImageUpload').addEventListener('change', (e) => {
+        // แก้ไขให้อัปโหลดรูปเดิมซ้ำได้โดยการเคลียร์ค่า value ทุกครั้งก่อนกดเลือกไฟล์
+        const fileInput = document.getElementById('tileImageUpload');
+        fileInput.addEventListener('click', () => {
+            fileInput.value = ''; 
+        });
+
+        fileInput.addEventListener('change', (e) => {
             handleImageUpload(e, (dataUrl) => {
                 const cropImg = document.getElementById('cropImageTag');
                 cropImg.src = dataUrl;
-                document.getElementById('cropModal').style.display = 'flex';
-                if (cropper) cropper.destroy();
                 
-                // Reset Crop box layout to normal when opening new image
-                document.getElementById('cropBoxContainer').classList.remove('maximized');
-                document.getElementById('maximizeCropIcon').innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+                // รีเซ็ตคลาส Fullscreen กลับเป็นจอเล็กเริ่มต้นก่อนเปิด
+                document.getElementById('cropBoxContainer').classList.remove('fullscreen');
+                document.getElementById('btnToggleFullscreen').textContent = "Maximize Fullscreen";
+                document.getElementById('cropModalTitle').style.display = 'block';
+                document.getElementById('cropModalDesc').style.display = 'block';
 
+                document.getElementById('cropModal').style.display = 'flex';
                 setTimeout(() => {
-                    cropper = new Cropper(cropImg, { 
-                        aspectRatio: 1, 
-                        viewMode: 1, 
-                        background: true,
-                        movable: true,
-                        zoomable: true,
-                        zoomOnWheel: true
-                    });
+                    initCropper(cropImg);
                 }, 50);
             });
         });
 
-        // Desktop Maximize / Restore Toggle Event
-        document.getElementById('btnToggleMaximizeCrop').onclick = () => {
-            const box = document.getElementById('cropBoxContainer');
-            const icon = document.getElementById('maximizeCropIcon');
-            if (box.classList.contains('maximized')) {
-                box.classList.remove('maximized');
-                icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+        // ปุ่ม Toggle Fullscreen สำหรับหน้า Crop บนเดสก์ท็อป
+        document.getElementById('btnToggleFullscreen').onclick = () => {
+            const container = document.getElementById('cropBoxContainer');
+            const title = document.getElementById('cropModalTitle');
+            const desc = document.getElementById('cropModalDesc');
+            
+            container.classList.toggle('fullscreen');
+            
+            if(container.classList.contains('fullscreen')) {
+                document.getElementById('btnToggleFullscreen').textContent = "Minimize Window";
+                title.style.display = 'none'; // ซ่อนหัวข้อเพื่อเพิ่มพื้นที่แนวตั้ง
+                desc.style.display = 'none';
             } else {
-                box.classList.add('maximized');
-                icon.innerHTML = '<path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"/>';
+                document.getElementById('btnToggleFullscreen').textContent = "Maximize Fullscreen";
+                title.style.display = 'block';
+                desc.style.display = 'block';
             }
-            // Recalculate cropper interface boundings smoothly
+            
+            // สั่งให้ Cropper คำนวณขนาดและจัดตำแหน่งให้อยู่ตรงกลางของพื้นที่ใหม่
             if (cropper) {
                 cropper.initContainer();
+                setTimeout(() => { cropper.center(); }, 50);
             }
         };
 
@@ -1010,7 +1036,6 @@
             saveCanvasState(); updateTilesFromCanvas();
             document.getElementById('cropModal').style.display = 'none';
             cropper.destroy(); cropper = null;
-            document.getElementById('tileImageUpload').value = ""; // Clear file input value to allow upload the same image file again
         };
 
         document.getElementById('btnCropNone').onclick = () => {
@@ -1024,7 +1049,6 @@
                 saveCanvasState(); updateTilesFromCanvas();
             };
             img.src = originalSrc;
-            document.getElementById('tileImageUpload').value = ""; // Clear file input value to allow upload the same image file again
         };
 
         // ผูกปุ่ม Undo, Redo, Clear Canvas, และ Reset Blueprint ในหน้า Edit
