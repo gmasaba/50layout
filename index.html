@@ -194,7 +194,6 @@
 
         .tool-group { margin-bottom: 20px; display: none; }
         .tool-group.active-tab { display: block; }
-        .tool-group.active-tab { display: block; }
         .tool-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         .tool-row label { font-size: 0.85rem; width: 100px; color: #64748b; flex-shrink: 0; }
         .tool-row input[type="range"] { flex: 1; }
@@ -279,8 +278,6 @@
             #mainView { height: 100vh; }
             .patterns-container { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 
-            #globalImageUpload { display: none !important; }
-
             .editor-container { flex-direction: column; height: 100vh; width: 100vw; }
             
             .workspace { height: calc(100% - 60px); flex: 1; width: 100%; padding-bottom: 250px; }
@@ -357,7 +354,6 @@
    <div class="upload-zone">
         <small style="color: #64748b; font-size: 0.95rem;">Click Layout Card to Enter Edit Mode</small>
         <div class="upload-actions">
-            <input type="file" id="globalImageUpload" accept="image/*">
             <button class="btn-outline" id="btnClearToP" style="font-size: 0.85rem; padding: 6px 12px;">Reset Image to Default</button>
         </div>
     </div>
@@ -923,6 +919,11 @@
     }
 
     function bindEvents() {
+        // บล็อกไม่ให้ Event หลุดลอยไปถึงหน้าหลักเมื่อกดปุ่มหรือใช้งานพาเนลด้านขวา
+        document.getElementById('toolsPanel').onclick = (e) => {
+            e.stopPropagation();
+        };
+
         window.addEventListener('popstate', (e) => {
             if(document.getElementById('editorView').style.display === 'block') {
                 e.preventDefault();
@@ -930,15 +931,11 @@
             }
         });
 
-        document.getElementById('btnClearToP').onclick = () => {
+        document.getElementById('btnClearToP').onclick = (e) => {
+            e.stopPropagation(); // หยุดการส่งต่อ Event
             currentImageUrl = "";
-            document.getElementById('globalImageUpload').value = "";
             generateExplorerGrid();
         };
-
-        document.getElementById('globalImageUpload').addEventListener('change', (e) => {
-            handleImageUpload(e, (dataUrl) => { currentImageUrl = dataUrl; generateExplorerGrid(); });
-        });
 
         document.getElementById('tileImageUpload').addEventListener('change', (e) => {
             handleImageUpload(e, (dataUrl) => {
@@ -952,7 +949,8 @@
             });
         });
 
-        document.getElementById('btnCropSquare').onclick = () => {
+        document.getElementById('btnCropSquare').onclick = (e) => {
+            e.stopPropagation();
             if (!cropper) return;
             const croppedCanvas = cropper.getCroppedCanvas({ width: canvas.width, height: canvas.height });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -962,7 +960,8 @@
             cropper.destroy(); cropper = null;
         };
 
-        document.getElementById('btnCropNone').onclick = () => {
+        document.getElementById('btnCropNone').onclick = (e) => {
+            e.stopPropagation();
             document.getElementById('cropModal').style.display = 'none';
             const originalSrc = document.getElementById('cropImageTag').src;
             if (cropper) { cropper.destroy(); cropper = null; }
@@ -975,15 +974,8 @@
             img.src = originalSrc;
         };
 
-        // เพิ่มการทำงานของปุ่ม Clear Canvas (แก้ปัญหาปุ่มกดไม่ทำงาน)
-        document.getElementById('btnClearCanvas').onclick = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            canvas.style.backgroundColor = document.getElementById('bgColor').value;
-            saveCanvasState();
-            updateTilesFromCanvas();
-        };
-
-        document.getElementById('btnResetToP').onclick = () => {
+        document.getElementById('btnResetToP').onclick = (e) => {
+            e.stopPropagation();
             drawingHistory = []; historyStep = -1;
             setupCanvasDefault(); updateTilesFromCanvas();
         };
@@ -995,7 +987,7 @@
             generateExplorerGrid();
         }
 
-        document.getElementById('btnBack').onclick = () => { closeEditorRoutine(); };
+        document.getElementById('btnBack').onclick = (e) => { e.stopPropagation(); closeEditorRoutine(); };
 
         document.getElementById('layoutSelect').onchange = (e) => {
             const found = patternsData.find(p => p.id == e.target.value);
@@ -1016,7 +1008,8 @@
             renderTessellation();
         };
 
-        document.getElementById('btnBucketTool').onclick = () => {
+        document.getElementById('btnBucketTool').onclick = (e) => {
+            e.stopPropagation();
             document.querySelectorAll('.tool-btn-outline').forEach(b => b.classList.remove('active'));
             document.getElementById('btnBucketTool').classList.add('active');
             selectedTool = 'fill';
@@ -1063,8 +1056,7 @@
             let targetX = e.clientX - startPanX;
             let targetY = e.clientY - startPanY;
             
-            const maxW = window.innerWidth * 0.4; 
-            const maxH = window.innerHeight * 0.4;
+            const maxW = window.innerWidth * 0.4;maxH = window.innerHeight * 0.4;
             panX = Math.min(Math.max(-maxW, targetX), maxW);
             panY = Math.min(Math.max(-maxH, targetY), maxH);
             applyTransform();
@@ -1091,8 +1083,7 @@
                 let targetX = touch.clientX - startPanX;
                 let targetY = touch.clientY - startPanY;
                 
-                const maxW = window.innerWidth * 0.4; 
-                const maxH = window.innerHeight * 0.4;
+                const maxW = window.innerWidth * 0.4;maxH = window.innerHeight * 0.4;
                 panX = Math.min(Math.max(-maxW, targetX), maxW);
                 panY = Math.min(Math.max(-maxH, targetY), maxH);
                 applyTransform();
@@ -1201,6 +1192,7 @@
     function updateTilesFromCanvas() { renderTessellation(); }
 
     function startDrawing(e) {
+        e.stopPropagation(); // หยุดสัญญาณไม่ให้ Bubble ขึ้นไปข้างบน
         const rect = canvas.getBoundingClientRect();
         startX = (e.clientX - rect.left) * (canvas.width / rect.width);
         startY = (e.clientY - rect.top) * (canvas.height / rect.height);
@@ -1224,6 +1216,7 @@
     }
 
     function draw(e) {
+        e.stopPropagation();
         if (!isDrawing) return;
         const rect = canvas.getBoundingClientRect();
         const currentX = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -1260,7 +1253,13 @@
         updateTilesFromCanvas();
     }
 
-    function stopDrawing() { if (!isDrawing) return; isDrawing = false; saveCanvasState(); }
+    function stopDrawing(e) { 
+        e.stopPropagation();
+        if (!isDrawing) return; 
+        isDrawing = false; 
+        saveCanvasState(); 
+    }
+    
     function saveCanvasState() {
         if (historyStep < drawingHistory.length - 1) drawingHistory = drawingHistory.slice(0, historyStep + 1);
         drawingHistory.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
