@@ -328,12 +328,15 @@
             
             #editPatternTitle, #editPatternDesc, .mini-preview-box, .desktop-tab-toggle, .tool-group h4, .tools-panel hr, #desktopPanelRulesZone { display: none !important; }
             .chain-linker-row { display: flex !important; justify-content: flex-end; margin-top: -15px; margin-bottom: 4px; width: 100%; }
+            .chain-linker-row .btn-chain-lock { width: 20px !important; height: 20px !important; }
+            .chain-linker-row .btn-chain-lock svg { width: 16px !important; height: 16px !important; }
+
 
             .tool-group { margin-bottom: 0; padding: 4px 0; }
             .tool-group.active-tab { display: block !important; }
 
             #tabGridExpansion { padding: 4px 5px; }
-            .tool-group .tool-row { margin-bottom: 20px; }
+            .tool-group .tool-row { margin-bottom: 18px; }
 
             .studio-layout-container {
                 grid-template-columns: 55px 1fr 65px; gap: 8px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
@@ -466,6 +469,14 @@
                         <label>Block Size (px)</label>
                         <input type="range" id="gridSizeInput" value="80" min="20" max="200">
                         <input type="number" id="gridSizeNum" class="num-input" value="80" min="20" max="200">
+                    </div>
+
+                    <div class="tool-row" style="margin-bottom: 20px;">
+                        <label>Grid Lines</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="chkShowGridLines" class="color-checkbox" checked>
+                            <span style="font-size: 0.85rem; color: #64748b;">Show preview border lines</span>
+                        </div>
                     </div>
                 </div>
 
@@ -675,7 +686,7 @@
         if (panel && activeTab) {
             let targetMaxHeight = '245px';
             if (activeTab.id === 'tabGridExpansion') {
-                targetMaxHeight = '185px'; /* เพิ่มความยาวเผื่อโซ่เล็กน้อย */
+                targetMaxHeight = '225px'; /* เพิ่มความยาวเผื่อกล่องเปิดปิด Grid lines */
             }
             panel.style.maxHeight = targetMaxHeight;
         }
@@ -1010,6 +1021,10 @@
             generateExplorerGrid();
         };
 
+        document.getElementById('chkShowGridLines').onchange = () => {
+            renderTessellation();
+        };
+
         document.getElementById('tileImageUpload').addEventListener('change', (e) => {
             handleImageUpload(e, (dataUrl) => {
                 const cropImg = document.getElementById('cropImageTag');
@@ -1271,6 +1286,7 @@
         const rows = parseInt(document.getElementById('gridRows').value) || 6;
         const tileSize = parseInt(document.getElementById('gridSizeInput').value) || 80;
         const currentBg = document.getElementById('bgColor').value;
+        const showGridLines = document.getElementById('chkShowGridLines').checked;
 
         const outputCanvas = document.getElementById('tessellationOutput');
         if (!outputCanvas) return;
@@ -1303,6 +1319,14 @@
                     if (transform === 'my90')  { oCtx.scale(1, -1); oCtx.rotate(90 * Math.PI / 180); }
                     
                     oCtx.drawImage(sourceTileImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize);
+                    
+                    // วาดเส้น Grid Lines ครอบแต่ละ Element หากตั้งค่าเปิดใช้งานไว้
+                    if (showGridLines) {
+                        oCtx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+                        oCtx.lineWidth = 1;
+                        oCtx.strokeRect(-tileSize / 2, -tileSize / 2, tileSize, tileSize);
+                    }
+
                     oCtx.restore();
                 }
             }
