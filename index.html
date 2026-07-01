@@ -506,11 +506,6 @@
                                 <div class="line-dot-opt active" data-value="6" title="Med"><div class="dot-shape" style="width:6px; height:6px;"></div></div>
                                 <div class="line-dot-opt" data-value="12" title="Thick"><div class="dot-shape" style="width:10px; height:10px;"></div></div>
                             </div>
-
-                            <button class="tool-btn-outline active" id="btnToggleGridLines" title="Toggle Grid Visibility" style="width: 100%; margin-top: 8px; height: 32px;">
-                                <svg viewBox="0 0 24 24" style="width:16px; height:16px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                <span style="font-size: 0.75rem; margin-left: 4px;">Show Grid</span>
-                            </button>
                         </div>
 
                         <div class="studio-center-col">
@@ -544,6 +539,11 @@
                             </div>
                         </div>
 
+                    </div>
+
+                    <div style="margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: #475569;">
+                        <input type="checkbox" id="chkShowPreviewGrid" class="color-checkbox" checked style="width:18px; height:18px;">
+                        <label for="chkShowPreviewGrid" style="cursor:pointer; font-weight: 500;">Show Preview Grid Lines</label>
                     </div>
 
                     <div class="canvas-actions-row">
@@ -656,7 +656,6 @@
     let selectedTool = "brush";
     let selectedLineWidth = 6;
     let cropper = null; 
-    let showCanvasGridLines = true; // สถานะเก็บว่าให้วาดเส้นกริดไกด์ไลน์หรือไม่
 
     // Canvas Engine State
     const canvas = document.getElementById('tileCanvas');
@@ -685,6 +684,8 @@
             let targetMaxHeight = '245px';
             if (activeTab.id === 'tabGridExpansion') {
                 targetMaxHeight = '185px'; /* เพิ่มความยาวเผื่อโซ่เล็กน้อย */
+            } else if (activeTab.id === 'tabTileStudio') {
+                targetMaxHeight = '280px'; /* ปรับขนาดสตูโมบายล์รองรับเช็คบ็อกซ์ใหม่ */
             }
             panel.style.maxHeight = targetMaxHeight;
         }
@@ -778,9 +779,8 @@
     function setupToolsGrid() {
         const buttons = document.querySelectorAll('.tool-btn-outline');
         buttons.forEach(btn => {
-            if (btn.id === 'btnToggleGridLines') return; // ข้ามปุ่มสลับกริดเส้นไกด์ไลน์
             btn.onclick = () => {
-                buttons.forEach(b => { if(b.id !== 'btnToggleGridLines') b.classList.remove('active'); });
+                buttons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedTool = btn.getAttribute('data-tool');
             };
@@ -850,27 +850,6 @@
                 });
             };
         });
-    }
-
-    // ฟังชั่นวาดเส้นตารางไกด์ไลน์ (Border Cross Overlay) บน Canvas Studio เลเยอร์บนสุด
-    function drawCanvasGridOverlay() {
-        if (!showCanvasGridLines) return;
-        ctx.save();
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]); // เส้นปรัศนี
-        
-        // กากบาทแกนกลาง
-        ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height);
-        ctx.moveTo(0, canvas.height / 2); ctx.lineTo(canvas.width, canvas.height / 2);
-        ctx.stroke();
-
-        // กรอบนอกสุด
-        ctx.setLineDash([]);
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
-        ctx.strokeRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
     }
 
     function setupCanvasDefault() {
@@ -1041,11 +1020,9 @@
             generateExplorerGrid();
         };
 
-        // ผูกมัดระบบปุ่ม Toggle สลับเปิดปิด Grid borders
-        document.getElementById('btnToggleGridLines').onclick = function() {
-            showCanvasGridLines = !showCanvasGridLines;
-            this.classList.toggle('active', showCanvasGridLines);
-            restoreCanvasStep(); // อัปเดตวาด Canvas Layer ซ้ำทันที
+        // สวิตช์สำหรับเปิดปิดเส้นกริด Preview
+        document.getElementById('chkShowPreviewGrid').onchange = () => {
+            renderTessellation();
         };
 
         document.getElementById('tileImageUpload').addEventListener('change', (e) => {
@@ -1104,14 +1081,7 @@
         document.getElementById('btnResetToP').onclick = () => { drawingHistory = []; historyStep = -1; setupCanvasDefault(); updateTilesFromCanvas(); };
 
         function closeEditorRoutine() {
-            // เมื่อกดออกจาก Editor ให้ดึง DataURL แบบที่ซ่อนเส้นกริดชั่วคราว เพื่อไม่ให้เส้นกริดติดไปที่หน้าแรก
-            const savedState = showCanvasGridLines;
-            showCanvasGridLines = false;
-            restoreCanvasStep();
             currentImageUrl = canvas.toDataURL();
-            showCanvasGridLines = savedState;
-            restoreCanvasStep();
-
             document.getElementById('editorView').style.display = 'none';
             document.getElementById('mainView').style.display = 'block';
             generateExplorerGrid();
@@ -1155,7 +1125,7 @@
         };
 
         document.getElementById('btnBucketTool').onclick = () => {
-            document.querySelectorAll('.tool-btn-outline').forEach(b => { if(b.id !== 'btnToggleGridLines') b.classList.remove('active'); });
+            document.querySelectorAll('.tool-btn-outline').forEach(b => b.classList.remove('active'));
             document.getElementById('btnBucketTool').classList.add('active');
             selectedTool = 'fill';
         };
@@ -1316,6 +1286,7 @@
         const rows = parseInt(document.getElementById('gridRows').value) || 6;
         const tileSize = parseInt(document.getElementById('gridSizeInput').value) || 80;
         const currentBg = document.getElementById('bgColor').value;
+        const isShowGridLines = document.getElementById('chkShowPreviewGrid').checked;
 
         const outputCanvas = document.getElementById('tessellationOutput');
         if (!outputCanvas) return;
@@ -1328,25 +1299,11 @@
         oCtx.fillStyle = currentBg;
         oCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
-        // ดึงเฉพาะรูปวาด/รูปอัปโหลดจริง โดยซ่อนเส้นกริดไกด์ชั่วคราวก่อนแปลงเป็น URL ส่งให้ Tessellation
-        const savedState = showCanvasGridLines;
-        showCanvasGridLines = false;
-        if (drawingHistory[historyStep]) {
-            ctx.putImageData(drawingHistory[historyStep], 0, 0);
-        }
-        const cleanTileUrl = canvas.toDataURL();
-        
-        // คืนค่าเส้นกริดกลับมาแสดงบน Canvas ใน Studio
-        showCanvasGridLines = savedState;
-        if (drawingHistory[historyStep]) {
-            ctx.putImageData(drawingHistory[historyStep], 0, 0);
-        }
-        drawCanvasGridOverlay();
-
         const sourceTileImg = new Image();
-        sourceTileImg.src = cleanTileUrl;
+        sourceTileImg.src = canvas.toDataURL();
         
         sourceTileImg.onload = function() {
+            // 1. วาดโครงสร้างรูปลวดลาย Tessellation ปกติ
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     const transform = getTransformWithPeriod(activePattern.matrix, r, c);
@@ -1366,17 +1323,35 @@
                     oCtx.restore();
                 }
             }
+
+            // 2. วาดเส้นกริดทับเลเยอร์บนสุด (Overlay) เสมอเมื่อเปิดใช้งานสวิตช์
+            if (isShowGridLines) {
+                oCtx.save();
+                oCtx.strokeStyle = "rgba(0, 0, 0, 0.25)"; // สีเส้นตัดเทาโปร่งใสเห็นได้ชัด
+                oCtx.lineWidth = 1;
+                
+                // เส้นกริดแนวตั้ง
+                for (let c = 0; c <= cols; c++) {
+                    oCtx.beginPath();
+                    oCtx.moveTo(c * tileSize, 0);
+                    oCtx.lineTo(c * tileSize, outputCanvas.height);
+                    oCtx.stroke();
+                }
+                // เส้นกริดแนวนอน
+                for (let r = 0; r <= rows; r++) {
+                    oCtx.beginPath();
+                    oCtx.moveTo(0, r * tileSize);
+                    oCtx.lineTo(outputCanvas.width, r * tileSize);
+                    oCtx.stroke();
+                }
+                oCtx.restore();
+            }
         };
     }
 
     function updateTilesFromCanvas() { renderTessellation(); }
 
     function startDrawing(e) {
-        // ก่อนเริ่มวาด ให้ดึง State ที่ลบเส้นกริดออกไปแล้ว เพื่อไม่ให้จังหวะลากเส้นดึงเอาสีเส้นกริดไปติดในภาพ Snapshot
-        if (drawingHistory[historyStep]) {
-            ctx.putImageData(drawingHistory[historyStep], 0, 0);
-        }
-
         const rect = canvas.getBoundingClientRect();
         startX = (e.clientX - rect.left) * (canvas.width / rect.width);
         startY = (e.clientY - rect.top) * (canvas.height / rect.height);
@@ -1433,52 +1408,16 @@
                 if (useFill) ctx.fill(); if (useStroke) ctx.stroke();
             }
         }
-        
-        // บังคับวาดทับ Grid Lines ตลอดเวลาระหว่างกำลังลากวาดรูป
-        drawCanvasGridOverlay();
-        renderTessellation();
+        updateTilesFromCanvas();
     }
 
-    function stopDrawing() { 
-        if (!isDrawing) return; 
-        isDrawing = false; 
-        
-        // แยกเลเยอร์: บันทึกข้อมูลประวัติการวาดภาพลง Array (ที่ไม่ติดเส้น Grid overlay ไปด้วย)
-        if (showCanvasGridLines) {
-            ctx.putImageData(canvasSnapshot, 0, 0);
-            // สั่งวาดเส้นทับอีกรอบในใจเพื่อเก็บ State สดล่าสุดก่อนแกะเม็ดพิกเซล
-            isDrawing = true; isDrawing = false; 
-            // ย้อนกระบวนการกลับมาวาดใหม่โดยอิงตามเครื่องมือล่าสุดเพื่อเก็บผลลัพธ์ลงประวัติ
-        }
-        
-        // คืนภาพวาดจริง (Clean) เข้าสู่ History Stack
-        saveCanvasState(); 
-        updateTilesFromCanvas(); 
-    }
-    
+    function stopDrawing() { if (!isDrawing) return; isDrawing = false; saveCanvasState(); }
     function saveCanvasState() {
         if (historyStep < drawingHistory.length - 1) drawingHistory = drawingHistory.slice(0, historyStep + 1);
-        
-        // ลบเส้นกริดออกไปก่อนเซฟประวัติเสมอ
-        const savedState = showCanvasGridLines;
-        showCanvasGridLines = false;
-        // หากมีประวัติเก่าอยู่ ให้ดึงขึ้นมาก่อน แล้วค่อยลบกรอบออก
-        
         drawingHistory.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
         historyStep++;
-        
-        showCanvasGridLines = savedState;
-        drawCanvasGridOverlay();
     }
-    
-    function restoreCanvasStep() { 
-        if (historyStep >= 0 && historyStep < drawingHistory.length) { 
-            ctx.putImageData(drawingHistory[historyStep], 0, 0); 
-            // วาดเส้นกริดไกด์ไลน์ทับลงไปข้างบนสุดเสมอ (หลังพ่นภาพพื้นหลัง/ภาพโหลดเสร็จ)
-            drawCanvasGridOverlay();
-            updateTilesFromCanvas(); 
-        } 
-    }
+    function restoreCanvasStep() { if (historyStep >= 0 && historyStep < drawingHistory.length) { ctx.putImageData(drawingHistory[historyStep], 0, 0); updateTilesFromCanvas(); } }
 
     function saveOutputAsImage() {
         if(!activePattern) return;
@@ -1491,16 +1430,8 @@
         eCtx.fillStyle = document.getElementById('bgColor').value;
         eCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
 
-        // ดึง Source Image แบบไม่มีเส้นตารางติดไป
-        const savedState = showCanvasGridLines;
-        showCanvasGridLines = false;
-        restoreCanvasStep();
-        const exportTileUrl = canvas.toDataURL();
-        showCanvasGridLines = savedState;
-        restoreCanvasStep();
-
         const sourceTileImg = new Image();
-        sourceTileImg.src = exportTileUrl;
+        sourceTileImg.src = canvas.toDataURL();
         sourceTileImg.onload = function() {
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
