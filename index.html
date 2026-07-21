@@ -145,6 +145,7 @@
             background: transparent; border: 1px solid #cbd5e1; padding: 8px;
             border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;
             color: var(--text-color); transition: all 0.15s ease;
+            gap: 5px; font-size: 0.85rem;
         }
         .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
         .btn-outline svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
@@ -427,8 +428,9 @@
                 </div>
 
                 <div id="headerActionButtonsWrapper">
-                    <button class="btn-outline active-toggle" id="btnToggleGrid" title="Toggle Grid Overlay">
+                    <button class="btn-outline" id="btnToggleDetailMode" title="Toggle Detail Preview Mode (100px / 200px)">
                         <svg viewBox="0 0 24 24"><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+                        <span id="detailModeText">100px</span>
                     </button>
                     <button class="btn-outline" id="btnOpenSaveModal" title="Save Pattern Image" style="color: #2563eb;">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
@@ -485,12 +487,6 @@
                         <label>Rows</label>
                         <input type="range" id="gridRows" value="6" min="1" max="30">
                         <input type="number" id="gridRowsNum" class="num-input" value="6" min="1" max="30">
-                    </div>
-
-                    <div class="tool-row">
-                        <label>Block Size (px)</label>
-                        <input type="range" id="gridSizeInput" value="80" min="20" max="200">
-                        <input type="number" id="gridSizeNum" class="num-input" value="80" min="20" max="200">
                     </div>
                 </div>
 
@@ -624,7 +620,7 @@
         </div>
 
         <div class="export-form-group">
-            <label>Image Size</label>
+            <label>Image Size (Locked Aspect Ratio)</label>
             <div class="export-input-row">
                 <div style="flex:1;">
                     <small style="color:#64748b;">Width:</small>
@@ -724,7 +720,9 @@
     let selectedTool = "brush";
     let selectedLineWidth = 6;
     let cropper = null; 
-    let showGridOverlay = true; 
+    
+    // กำหนดค่าตั้งต้นของ Block Size เป็น 100px และโหมดความละเอียดสูง (200px)
+    let currentBlockSize = 100;
     
     // Canvas Engine State
     const canvas = document.getElementById('tileCanvas');
@@ -1007,18 +1005,6 @@
         num.oninput = function() { updateValues(this.value); };
     }
 
-    function syncInputs(sliderId, numId, callback) {
-        const slider = document.getElementById(sliderId);
-        const num = document.getElementById(numId);
-        slider.oninput = function() { num.value = this.value; callback(); };
-        num.oninput = function() {
-            let val = parseInt(this.value);
-            if (isNaN(val)) val = parseInt(slider.min);
-            slider.value = val;
-            callback();
-        };
-    }
-
     function getTransformWithPeriod(matrix, r, c) {
         const blueprintCols = 6; const blueprintRows = 4;
         const br = r % blueprintRows;
@@ -1042,7 +1028,7 @@
         setTimeout(() => {
             const cols = parseInt(document.getElementById('gridCols').value) || 8;
             const rows = parseInt(document.getElementById('gridRows').value) || 6;
-            const tileSize = parseInt(document.getElementById('gridSizeInput').value) || 80;
+            const tileSize = currentBlockSize;
             
             const rawWidth = cols * tileSize;
             const rawHeight = rows * tileSize;
@@ -1087,10 +1073,19 @@
             generateExplorerGrid();
         };
 
-        document.getElementById('btnToggleGrid').onclick = function() {
-            showGridOverlay = !showGridOverlay;
-            this.classList.toggle('active-toggle', showGridOverlay);
+        // สลับความละเอียดการพรีวิวระหว่าง 100px และ 200px (HD Detail)
+        document.getElementById('btnToggleDetailMode').onclick = function() {
+            if (currentBlockSize === 100) {
+                currentBlockSize = 200;
+                this.classList.add('active-toggle');
+                document.getElementById('detailModeText').textContent = "200px (HD)";
+            } else {
+                currentBlockSize = 100;
+                this.classList.remove('active-toggle');
+                document.getElementById('detailModeText').textContent = "100px";
+            }
             renderTessellation();
+            autoFitPreviewToViewport();
         };
 
         document.getElementById('tileImageUpload').addEventListener('change', (e) => {
@@ -1180,7 +1175,6 @@
 
         syncGridInputs('gridCols', 'gridColsNum', true);
         syncGridInputs('gridRows', 'gridRowsNum', false);
-        syncInputs('gridSizeInput', 'gridSizeNum', renderTessellation);
         
         document.getElementById('bgColor').oninput = () => {
             canvas.style.backgroundColor = document.getElementById('bgColor').value;
@@ -1317,14 +1311,6 @@
         renderMiniPPreview(pattern);
         canvas.style.backgroundColor = document.getElementById('bgColor').value;
 
-        if (window.innerWidth <= 991) {
-            document.getElementById('gridSizeInput').value = 40;
-            document.getElementById('gridSizeNum').value = 40;
-        } else {
-            document.getElementById('gridSizeInput').value = 80;
-            document.getElementById('gridSizeNum').value = 80;
-        }
-
         if(currentImageUrl) {
             const img = new Image();
             img.onload = () => {
@@ -1345,7 +1331,7 @@
         if (!activePattern) return;
         const cols = parseInt(document.getElementById('gridCols').value) || 8;
         const rows = parseInt(document.getElementById('gridRows').value) || 6;
-        const tileSize = parseInt(document.getElementById('gridSizeInput').value) || 80;
+        const tileSize = currentBlockSize;
         const currentBg = document.getElementById('bgColor').value;
 
         const outputCanvas = document.getElementById('tessellationOutput');
@@ -1381,27 +1367,6 @@
                     oCtx.drawImage(sourceTileImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize);
                     oCtx.restore();
                 }
-            }
-
-            if (showGridOverlay) {
-                oCtx.save();
-                oCtx.strokeStyle = "#000000"; 
-                oCtx.lineWidth = 1.5;         
-                
-                for (let c = 0; c <= cols; c++) {
-                    oCtx.beginPath();
-                    oCtx.moveTo(c * tileSize, 0);
-                    oCtx.lineTo(c * tileSize, outputCanvas.height);
-                    oCtx.stroke();
-                }
-                
-                for (let r = 0; r <= rows; r++) {
-                    oCtx.beginPath();
-                    oCtx.moveTo(0, r * tileSize);
-                    oCtx.lineTo(outputCanvas.width, r * tileSize);
-                    oCtx.stroke();
-                }
-                oCtx.restore();
             }
         };
     }
@@ -1487,11 +1452,19 @@
 
         let defaultPxWidth = 1000;
         let defaultPxHeight = 1000;
+        let isUpdatingFields = false;
 
-        function updateExportFields() {
+        function getGridAspectRatio() {
             const cols = parseInt(document.getElementById('gridCols').value) || 8;
             const rows = parseInt(document.getElementById('gridRows').value) || 6;
-            const tileSize = parseInt(document.getElementById('gridSizeInput').value) || 80;
+            return cols / rows; // สัดส่วน Width / Height
+        }
+
+        function updateExportFields() {
+            isUpdatingFields = true;
+            const cols = parseInt(document.getElementById('gridCols').value) || 8;
+            const rows = parseInt(document.getElementById('gridRows').value) || 6;
+            const tileSize = 100; // ค่าพื้นฐานสำหรับคำนวณ
 
             defaultPxWidth = cols * tileSize;
             defaultPxHeight = rows * tileSize;
@@ -1509,6 +1482,7 @@
                 widthInput.value = ((defaultPxWidth / ppi) * 2.54).toFixed(2);
                 heightInput.value = ((defaultPxHeight / ppi) * 2.54).toFixed(2);
             }
+            isUpdatingFields = false;
             recalculatePxInfo();
         }
 
@@ -1532,6 +1506,37 @@
             resText.textContent = `${finalPxW} x ${finalPxH} px (${ppi} PPI)`;
         }
 
+        // ล็อกสัดส่วนอัตโนมัติเมื่อผู้ใช้แก้ไข Width หรือ Height
+        widthInput.oninput = function() {
+            if (isUpdatingFields) return;
+            isUpdatingFields = true;
+            const ratio = getGridAspectRatio();
+            const w = parseFloat(this.value);
+            if (!isNaN(w) && w > 0) {
+                const calculatedH = w / ratio;
+                heightInput.value = Number.isInteger(calculatedH) ? calculatedH : calculatedH.toFixed(2);
+            } else {
+                heightInput.value = '';
+            }
+            isUpdatingFields = false;
+            recalculatePxInfo();
+        };
+
+        heightInput.oninput = function() {
+            if (isUpdatingFields) return;
+            isUpdatingFields = true;
+            const ratio = getGridAspectRatio();
+            const h = parseFloat(this.value);
+            if (!isNaN(h) && h > 0) {
+                const calculatedW = h * ratio;
+                widthInput.value = Number.isInteger(calculatedW) ? calculatedW : calculatedW.toFixed(2);
+            } else {
+                widthInput.value = '';
+            }
+            isUpdatingFields = false;
+            recalculatePxInfo();
+        };
+
         document.getElementById('btnOpenSaveModal').onclick = () => {
             modal.style.display = 'flex';
             updateExportFields();
@@ -1543,8 +1548,6 @@
 
         ppiSelect.onchange = updateExportFields;
         unitSelect.onchange = updateExportFields;
-        widthInput.oninput = recalculatePxInfo;
-        heightInput.oninput = recalculatePxInfo;
 
         document.getElementById('btnConfirmSaveImage').onclick = () => {
             const unit = unitSelect.value;
@@ -1603,27 +1606,6 @@
                     eCtx.drawImage(sourceTileImg, -tileSizeX/2, -tileSizeY/2, tileSizeX, tileSizeY);
                     eCtx.restore();
                 }
-            }
-
-            if (showGridOverlay) {
-                eCtx.save();
-                eCtx.strokeStyle = "#000000"; 
-                eCtx.lineWidth = Math.max(1, Math.round(targetWidth / 1000 * 1.5));         
-                
-                for (let c = 0; c <= cols; c++) {
-                    eCtx.beginPath();
-                    eCtx.moveTo(c * tileSizeX, 0);
-                    eCtx.lineTo(c * tileSizeX, exportCanvas.height);
-                    eCtx.stroke();
-                }
-                
-                for (let r = 0; r <= rows; r++) {
-                    eCtx.beginPath();
-                    eCtx.moveTo(0, r * tileSizeY);
-                    eCtx.lineTo(exportCanvas.width, r * tileSizeY);
-                    eCtx.stroke();
-                }
-                eCtx.restore();
             }
 
             const link = document.createElement('a');
