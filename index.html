@@ -149,7 +149,6 @@
         .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
         .btn-outline svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
         
-        /* สไตล์พิเศษสำหรับปุ่มท็อกเกิลกริตเมื่อเปิดใช้งาน */
         .btn-outline.active-toggle {
             background: #e2e8f0;
             border-color: #64748b;
@@ -281,24 +280,35 @@
         #headerLayoutSelectWrapper { display: flex; flex: 1; justify-content: center; padding: 0 10px; }
         #headerActionButtonsWrapper { display: flex; gap: 8px; align-items: center; }
 
-        /* --- Crop Modal Layout Optimized (Desktop Focus) --- */
-        #cropModal {
+        /* Modals Common Style */
+        .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center;
         }
+        .modal-body-box { 
+            background: white; padding: 30px; border-radius: 16px; 
+            max-width: 500px; width: 90%; text-align: left; position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .modal-close-btn {
+            position: absolute; top: 15px; right: 15px; background: transparent; border: none;
+            cursor: pointer; color: #64748b; padding: 5px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: background 0.15s;
+        }
+        .modal-close-btn:hover { background: #f1f5f9; color: #1e293b; }
+        .modal-close-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        /* Save Modal Specific Style */
+        .export-form-group { margin-bottom: 15px; }
+        .export-form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        .export-input-row { display: flex; gap: 10px; align-items: center; }
+
+        /* --- Crop Modal Layout Optimized (Desktop Focus) --- */
         .crop-box { 
             background: white; padding: 30px; border-radius: 16px; 
             max-width: 1400px; width: 95%; text-align: center; position: relative;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
         }
-        .crop-close-btn {
-            position: absolute; top: 15px; right: 15px; background: transparent; border: none;
-            cursor: pointer; color: #64748b; padding: 5px; display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; transition: background 0.15s;
-        }
-        .crop-close-btn:hover { background: #f1f5f9; color: #1e293b; }
-        .crop-close-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
-        
         .crop-preview-container { 
             height: 800px; max-height: 80vh; margin: 20px 0; background: #f8fafc; 
             position: relative; overflow: hidden; border-radius: 8px; border: 1px solid #e2e8f0;
@@ -338,7 +348,6 @@
             .chain-linker-row { display: flex !important; justify-content: flex-end; margin-top: -15px; margin-bottom: 4px; width: 100%; }
             .chain-linker-row .btn-chain-lock { width: 20px !important; height: 20px !important; }
             .chain-linker-row .btn-chain-lock svg { width: 16px !important; height: 16px !important; }
-
 
             .tool-group { margin-bottom: 0; padding: 4px 0; }
             .tool-group.active-tab { display: block !important; }
@@ -421,7 +430,7 @@
                     <button class="btn-outline active-toggle" id="btnToggleGrid" title="Toggle Grid Overlay">
                         <svg viewBox="0 0 24 24"><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
                     </button>
-                    <button class="btn-outline" id="btnSaveImage" title="Save Pattern Image" style="color: #2563eb;">
+                    <button class="btn-outline" id="btnOpenSaveModal" title="Save Pattern Image" style="color: #2563eb;">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                     </button>
                 </div>
@@ -588,9 +597,60 @@
     </div>
 </div>
 
-<div id="cropModal">
+<!-- Modal สำหรับตั้งค่า Save Image -->
+<div id="saveImageModal" class="modal-overlay">
+    <div class="modal-body-box">
+        <button class="modal-close-btn" id="btnSaveModalClose" title="Close">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <h3 style="margin-top:0; color: var(--primary-color);">Export Image Settings</h3>
+        
+        <div class="export-form-group">
+            <label>PPI Resolution (DPI)</label>
+            <select id="exportPPI">
+                <option value="72">72 PPI (Screen/Web)</option>
+                <option value="150">150 PPI (Medium Quality Print)</option>
+                <option value="300" selected>300 PPI (High Quality Print)</option>
+            </select>
+        </div>
+
+        <div class="export-form-group">
+            <label>Dimensions Unit</label>
+            <select id="exportUnit">
+                <option value="px" selected>Pixels (px)</option>
+                <option value="cm">Centimeters (cm)</option>
+                <option value="inch">Inches (inch)</option>
+            </select>
+        </div>
+
+        <div class="export-form-group">
+            <label>Image Size</label>
+            <div class="export-input-row">
+                <div style="flex:1;">
+                    <small style="color:#64748b;">Width:</small>
+                    <input type="number" id="exportWidth" class="num-input" style="width:100%; height:38px;" step="any">
+                </div>
+                <div style="flex:1;">
+                    <small style="color:#64748b;">Height:</small>
+                    <input type="number" id="exportHeight" class="num-input" style="width:100%; height:38px;" step="any">
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px; font-size:0.8rem; color:#64748b; background:#f1f5f9; padding:10px; border-radius:6px;">
+            Output Resolution: <strong id="calcResolutionText">0 x 0 px</strong>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+            <button class="btn-outline" id="btnCancelSave">Cancel</button>
+            <button class="btn-outline" id="btnConfirmSaveImage" style="background: var(--primary-color); color: white;">Download Image</button>
+        </div>
+    </div>
+</div>
+
+<div id="cropModal" class="modal-overlay">
     <div class="crop-box">
-        <button class="crop-close-btn" id="btnModalXClose" title="Close Without Saving">
+        <button class="modal-close-btn" id="btnModalXClose" title="Close Without Saving">
             <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
         <h3>Adjust Image Area Selection</h3>
@@ -664,8 +724,8 @@
     let selectedTool = "brush";
     let selectedLineWidth = 6;
     let cropper = null; 
-    let showGridOverlay = true; // สถานะเริ่มต้นของการแสดงผลเส้นกริด
-
+    let showGridOverlay = true; 
+    
     // Canvas Engine State
     const canvas = document.getElementById('tileCanvas');
     const ctx = canvas.getContext('2d');
@@ -682,7 +742,7 @@
     let isPanning = false;
     let startPanX = 0, startPanY = 0;
 
-    // สถานะการล็อกโซ่ (Columns และ Rows สัมพันธ์กันหรือไม่)
+    // สถานะการล็อกโซ่
     let isChainLocked = true;
 
     function adjustMobilePanelHeight() {
@@ -692,7 +752,7 @@
         if (panel && activeTab) {
             let targetMaxHeight = '245px';
             if (activeTab.id === 'tabGridExpansion') {
-                targetMaxHeight = '185px'; /* เพิ่มความยาวเผื่อโซ่เล็กน้อย */
+                targetMaxHeight = '185px'; 
             }
             panel.style.maxHeight = targetMaxHeight;
         }
@@ -708,6 +768,7 @@
         setupDesktopTabs();
         bindEvents();
         setupResponsiveLayoutEngine();
+        setupSaveExportModal();
         setTimeout(adjustMobilePanelHeight, 150);
     }
 
@@ -920,7 +981,6 @@
         return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
     }
 
-    // ฟังก์ชันสำหรับผูกมัดค่าอินพุตแบบแยกส่วน พร้อมการรองรับ Chain Lock 
     function syncGridInputs(sliderId, numId, isColumnInput) {
         const slider = document.getElementById(sliderId);
         const num = document.getElementById(numId);
@@ -1027,7 +1087,6 @@
             generateExplorerGrid();
         };
 
-        // ผูกมัดเหตุการณ์สำหรับปุ่มเปิดปิดเส้นกริด (Grid Overlay Button)
         document.getElementById('btnToggleGrid').onclick = function() {
             showGridOverlay = !showGridOverlay;
             this.classList.toggle('active-toggle', showGridOverlay);
@@ -1108,12 +1167,10 @@
             }
         };
 
-        // ผูกมัดระบบโซ่ล็อก (Chain Linker) ล็อกอัตราส่วนคอลัมน์และแถว
         document.getElementById('btnChainLock').onclick = function() {
             isChainLocked = !isChainLocked;
             this.classList.toggle('active', isChainLocked);
             if (isChainLocked) {
-                // ซิงค์ค่าให้เท่ากันทันทีเมื่อกดล็อกโซ่
                 const currentCols = document.getElementById('gridCols').value;
                 document.getElementById('gridRows').value = currentCols;
                 document.getElementById('gridRowsNum').value = currentCols;
@@ -1121,11 +1178,8 @@
             }
         };
 
-        // เรียกใช้งานระบบการซิงค์ค่า Grid แบบใหม่ที่รองรับการตรวจสอบโซ่ล็อก
         syncGridInputs('gridCols', 'gridColsNum', true);
         syncGridInputs('gridRows', 'gridRowsNum', false);
-        
-        // Block size แยกทำงานปกติ
         syncInputs('gridSizeInput', 'gridSizeNum', renderTessellation);
         
         document.getElementById('bgColor').oninput = () => {
@@ -1234,8 +1288,6 @@
             e.stopPropagation(); scale = 1; panX = 0; panY = 0; applyTransform();
             autoFitPreviewToViewport();
         };
-
-        document.getElementById('btnSaveImage').onclick = saveOutputAsImage;
     }
 
     function applyTransform() {
@@ -1311,7 +1363,6 @@
         sourceTileImg.src = canvas.toDataURL();
         
         sourceTileImg.onload = function() {
-            // วาดบล็อกลวดลาย Tessellation ลงบน Canvas
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     const transform = getTransformWithPeriod(activePattern.matrix, r, c);
@@ -1332,20 +1383,18 @@
                 }
             }
 
-            // ตรวจสอบเงื่อนไขการวาด "เส้นกริดรูป preview" (Grid Overlay) ทับหน้าลวดลายหลัง Render เสร็จสิ้น
             if (showGridOverlay) {
                 oCtx.save();
-                oCtx.strokeStyle = "#000000"; // ปรับเป็นเส้นทึบสีดำ 100% ชัดเจนแม้ภาพฉากหลังจะเป็นสีใดๆ
-                oCtx.lineWidth = 1.5;         // ขนาดความหนาของเส้นกริดที่เหมาะสมมองเห็นง่าย
+                oCtx.strokeStyle = "#000000"; 
+                oCtx.lineWidth = 1.5;         
                 
-                // วาดเส้นตารางตามแนวตั้ง (Vertical Lines)
                 for (let c = 0; c <= cols; c++) {
                     oCtx.beginPath();
                     oCtx.moveTo(c * tileSize, 0);
                     oCtx.lineTo(c * tileSize, outputCanvas.height);
                     oCtx.stroke();
                 }
-                // วาดเส้นตารางตามแนวนอน (Horizontal Lines)
+                
                 for (let r = 0; r <= rows; r++) {
                     oCtx.beginPath();
                     oCtx.moveTo(0, r * tileSize);
@@ -1427,13 +1476,110 @@
     }
     function restoreCanvasStep() { if (historyStep >= 0 && historyStep < drawingHistory.length) { ctx.putImageData(drawingHistory[historyStep], 0, 0); updateTilesFromCanvas(); } }
 
-    function saveOutputAsImage() {
+    /* --- System logic for Export Modal & Advanced Image Saving --- */
+    function setupSaveExportModal() {
+        const modal = document.getElementById('saveImageModal');
+        const ppiSelect = document.getElementById('exportPPI');
+        const unitSelect = document.getElementById('exportUnit');
+        const widthInput = document.getElementById('exportWidth');
+        const heightInput = document.getElementById('exportHeight');
+        const resText = document.getElementById('calcResolutionText');
+
+        let defaultPxWidth = 1000;
+        let defaultPxHeight = 1000;
+
+        function updateExportFields() {
+            const cols = parseInt(document.getElementById('gridCols').value) || 8;
+            const rows = parseInt(document.getElementById('gridRows').value) || 6;
+            const tileSize = parseInt(document.getElementById('gridSizeInput').value) || 80;
+
+            defaultPxWidth = cols * tileSize;
+            defaultPxHeight = rows * tileSize;
+
+            const unit = unitSelect.value;
+            const ppi = parseFloat(ppiSelect.value);
+
+            if (unit === 'px') {
+                widthInput.value = defaultPxWidth;
+                heightInput.value = defaultPxHeight;
+            } else if (unit === 'inch') {
+                widthInput.value = (defaultPxWidth / ppi).toFixed(2);
+                heightInput.value = (defaultPxHeight / ppi).toFixed(2);
+            } else if (unit === 'cm') {
+                widthInput.value = ((defaultPxWidth / ppi) * 2.54).toFixed(2);
+                heightInput.value = ((defaultPxHeight / ppi) * 2.54).toFixed(2);
+            }
+            recalculatePxInfo();
+        }
+
+        function recalculatePxInfo() {
+            const unit = unitSelect.value;
+            const ppi = parseFloat(ppiSelect.value);
+            let w = parseFloat(widthInput.value) || 0;
+            let h = parseFloat(heightInput.value) || 0;
+
+            let finalPxW = w;
+            let finalPxH = h;
+
+            if (unit === 'inch') {
+                finalPxW = Math.round(w * ppi);
+                finalPxH = Math.round(h * ppi);
+            } else if (unit === 'cm') {
+                finalPxW = Math.round((w / 2.54) * ppi);
+                finalPxH = Math.round((h / 2.54) * ppi);
+            }
+
+            resText.textContent = `${finalPxW} x ${finalPxH} px (${ppi} PPI)`;
+        }
+
+        document.getElementById('btnOpenSaveModal').onclick = () => {
+            modal.style.display = 'flex';
+            updateExportFields();
+        };
+
+        const closeModal = () => { modal.style.display = 'none'; };
+        document.getElementById('btnSaveModalClose').onclick = closeModal;
+        document.getElementById('btnCancelSave').onclick = closeModal;
+
+        ppiSelect.onchange = updateExportFields;
+        unitSelect.onchange = updateExportFields;
+        widthInput.oninput = recalculatePxInfo;
+        heightInput.oninput = recalculatePxInfo;
+
+        document.getElementById('btnConfirmSaveImage').onclick = () => {
+            const unit = unitSelect.value;
+            const ppi = parseFloat(ppiSelect.value);
+            let w = parseFloat(widthInput.value) || 0;
+            let h = parseFloat(heightInput.value) || 0;
+
+            let finalPxWidth = w;
+            let finalPxHeight = h;
+
+            if (unit === 'inch') {
+                finalPxWidth = Math.round(w * ppi);
+                finalPxHeight = Math.round(h * ppi);
+            } else if (unit === 'cm') {
+                finalPxWidth = Math.round((w / 2.54) * ppi);
+                finalPxHeight = Math.round((h / 2.54) * ppi);
+            }
+
+            saveOutputAsImageCustom(finalPxWidth, finalPxHeight);
+            closeModal();
+        };
+    }
+
+    function saveOutputAsImageCustom(targetWidth, targetHeight) {
         if(!activePattern) return;
         const cols = parseInt(document.getElementById('gridCols').value) || 8;
         const rows = parseInt(document.getElementById('gridRows').value) || 6;
-        const tileSize = parseInt(document.getElementById('gridSizeInput').value) || 80;
+        
         const exportCanvas = document.createElement('canvas');
-        exportCanvas.width = cols * tileSize; exportCanvas.height = rows * tileSize;
+        exportCanvas.width = targetWidth; 
+        exportCanvas.height = targetHeight;
+        
+        const tileSizeX = targetWidth / cols;
+        const tileSizeY = targetHeight / rows;
+
         const eCtx = exportCanvas.getContext('2d');
         eCtx.fillStyle = document.getElementById('bgColor').value;
         eCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
@@ -1441,12 +1587,11 @@
         const sourceTileImg = new Image();
         sourceTileImg.src = canvas.toDataURL();
         sourceTileImg.onload = function() {
-            // 1. วาดลวดลายชิ้นงานแบบ Tessellation ทั้งหมดลงบน Canvas ที่จะ Export
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     const transform = getTransformWithPeriod(activePattern.matrix, r, c);
                     eCtx.save();
-                    eCtx.translate(c * tileSize + tileSize / 2, r * tileSize + tileSize / 2);
+                    eCtx.translate(c * tileSizeX + tileSizeX / 2, r * tileSizeY + tileSizeY / 2);
                     if (transform === 'r90')  eCtx.rotate(90 * Math.PI / 180);
                     if (transform === 'r180') eCtx.rotate(180 * Math.PI / 180);
                     if (transform === 'r270') eCtx.rotate(270 * Math.PI / 180);
@@ -1455,38 +1600,36 @@
                     if (transform === 'mxy')  eCtx.scale(-1, -1);
                     if (transform === 'mx90') { eCtx.scale(-1, 1); eCtx.rotate(90 * Math.PI / 180); }
                     if (transform === 'my90') { eCtx.scale(1, -1); eCtx.rotate(90 * Math.PI / 180); }
-                    eCtx.drawImage(sourceTileImg, -tileSize/2, -tileSize/2, tileSize, tileSize);
+                    eCtx.drawImage(sourceTileImg, -tileSizeX/2, -tileSizeY/2, tileSizeX, tileSizeY);
                     eCtx.restore();
                 }
             }
 
-            // 2. ตรวจสอบสถานะการกดเปิดปุ่มกริด ถ้าเปิดอยู่ (`showGridOverlay === true`) ให้วาดเส้นกริดลงบนรูปภาพผลลัพธ์ด้วย
             if (showGridOverlay) {
                 eCtx.save();
-                eCtx.strokeStyle = "#000000"; // เส้นกริดสีดำทึบ 100% ชัดเจนเหมือนหน้า preview
-                eCtx.lineWidth = 1.5;         // ความหนาคงที่เท่าหน้า preview
+                eCtx.strokeStyle = "#000000"; 
+                eCtx.lineWidth = Math.max(1, Math.round(targetWidth / 1000 * 1.5));         
                 
-                // วาดเส้นกริดแนวตั้ง
                 for (let c = 0; c <= cols; c++) {
                     eCtx.beginPath();
-                    eCtx.moveTo(c * tileSize, 0);
-                    eCtx.lineTo(c * tileSize, exportCanvas.height);
+                    eCtx.moveTo(c * tileSizeX, 0);
+                    eCtx.lineTo(c * tileSizeX, exportCanvas.height);
                     eCtx.stroke();
                 }
-                // วาดเส้นกริดแนวนอน
+                
                 for (let r = 0; r <= rows; r++) {
                     eCtx.beginPath();
-                    eCtx.moveTo(0, r * tileSize);
-                    eCtx.lineTo(exportCanvas.width, r * tileSize);
+                    eCtx.moveTo(0, r * tileSizeY);
+                    eCtx.lineTo(exportCanvas.width, r * tileSizeY);
                     eCtx.stroke();
                 }
                 eCtx.restore();
             }
 
-            // 3. ทำการดาวน์โหลดไฟล์รูปภาพ
             const link = document.createElement('a');
             link.download = `Tessellation-${activePattern.title}.png`;
-            link.href = exportCanvas.toDataURL('image/png'); link.click();
+            link.href = exportCanvas.toDataURL('image/png'); 
+            link.click();
         };
     }
 
