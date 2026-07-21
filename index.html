@@ -145,7 +145,6 @@
             background: transparent; border: 1px solid #cbd5e1; padding: 8px;
             border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;
             color: var(--text-color); transition: all 0.15s ease;
-            gap: 5px; font-size: 0.85rem;
         }
         .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
         .btn-outline svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
@@ -201,14 +200,38 @@
         .tool-group { margin-bottom: 20px; display: none; }
         .tool-group.active-tab { display: block; }
         .tool-group h4 { margin-top: 0; margin-bottom: 15px; color: var(--primary-color); }
-        .tool-row { display: flex; gap: 10px; margin-bottom: 36px; align-items: center; }
+        .tool-row { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
         .tool-row label { font-size: 0.85rem; width: 100px; color: #64748b; flex-shrink: 0; }
         .tool-row input[type="range"] { flex: 1; }
         .num-input { width: 60px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; }
         select { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; width: 100%; background: #ffffff; }
 
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            margin-bottom: 15px;
+            user-select: none;
+        }
+        .checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+        .checkbox-row span {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
         .chain-linker-row {
-            display: flex; justify-content: flex-end; margin-top: -30px; margin-bottom: 8px; padding-right: 20px;
+            display: flex; justify-content: flex-end; margin-top: -15px; margin-bottom: 8px; padding-right: 20px;
         }
         .btn-chain-lock {
             background: transparent; border: none; width: 28px; height: 28px; border-radius: 6px;
@@ -354,7 +377,7 @@
             .tool-group.active-tab { display: block !important; }
 
             #tabGridExpansion { padding: 4px 5px; }
-            .tool-group .tool-row { margin-bottom: 18px; }
+            .tool-group .tool-row { margin-bottom: 14px; }
 
             .studio-layout-container {
                 grid-template-columns: 55px 1fr 65px; gap: 8px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
@@ -428,9 +451,8 @@
                 </div>
 
                 <div id="headerActionButtonsWrapper">
-                    <button class="btn-outline" id="btnToggleDetailMode" title="Toggle Detail Preview Mode (100px / 200px)">
+                    <button class="btn-outline active-toggle" id="btnToggleGrid" title="Toggle Grid Overlay">
                         <svg viewBox="0 0 24 24"><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
-                        <span id="detailModeText">100px</span>
                     </button>
                     <button class="btn-outline" id="btnOpenSaveModal" title="Save Pattern Image" style="color: #2563eb;">
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
@@ -488,6 +510,11 @@
                         <input type="range" id="gridRows" value="6" min="1" max="30">
                         <input type="number" id="gridRowsNum" class="num-input" value="6" min="1" max="30">
                     </div>
+
+                    <label class="checkbox-row">
+                        <input type="checkbox" id="chkHDView">
+                        <span>พรีวิวแบบละเอียด (HD View)</span>
+                    </label>
                 </div>
 
                 <div class="tool-group" id="tabTileStudio">
@@ -620,7 +647,7 @@
         </div>
 
         <div class="export-form-group">
-            <label>Image Size (Locked Aspect Ratio)</label>
+            <label>Image Size</label>
             <div class="export-input-row">
                 <div style="flex:1;">
                     <small style="color:#64748b;">Width:</small>
@@ -654,7 +681,7 @@
         <div class="crop-preview-container">
             <img id="cropImageTag" src="" alt="preview">
         </div>
-        <div style="display:flex; gap:10px; justify-content: center;">
+        <div style="display:flex; gap:10px; justify- content: center;">
             <button class="btn-outline" id="btnCropSquare" style="background:var(--primary-color); color:white;">Confirm Square Crop (1:1)</button>
             <button class="btn-outline" id="btnCropNone">Keep Original Aspect (Stretch/Fit)</button>
         </div>
@@ -720,9 +747,7 @@
     let selectedTool = "brush";
     let selectedLineWidth = 6;
     let cropper = null; 
-    
-    // กำหนดค่าตั้งต้นของ Block Size เป็น 100px และโหมดความละเอียดสูง (200px)
-    let currentBlockSize = 100;
+    let showGridOverlay = true; 
     
     // Canvas Engine State
     const canvas = document.getElementById('tileCanvas');
@@ -742,6 +767,10 @@
 
     // สถานะการล็อกโซ่
     let isChainLocked = true;
+
+    function getGridSize() {
+        return document.getElementById('chkHDView').checked ? 200 : 100;
+    }
 
     function adjustMobilePanelHeight() {
         if (window.innerWidth > 991) return;
@@ -1028,7 +1057,7 @@
         setTimeout(() => {
             const cols = parseInt(document.getElementById('gridCols').value) || 8;
             const rows = parseInt(document.getElementById('gridRows').value) || 6;
-            const tileSize = currentBlockSize;
+            const tileSize = getGridSize();
             
             const rawWidth = cols * tileSize;
             const rawHeight = rows * tileSize;
@@ -1073,19 +1102,14 @@
             generateExplorerGrid();
         };
 
-        // สลับความละเอียดการพรีวิวระหว่าง 100px และ 200px (HD Detail)
-        document.getElementById('btnToggleDetailMode').onclick = function() {
-            if (currentBlockSize === 100) {
-                currentBlockSize = 200;
-                this.classList.add('active-toggle');
-                document.getElementById('detailModeText').textContent = "200px (HD)";
-            } else {
-                currentBlockSize = 100;
-                this.classList.remove('active-toggle');
-                document.getElementById('detailModeText').textContent = "100px";
-            }
+        document.getElementById('btnToggleGrid').onclick = function() {
+            showGridOverlay = !showGridOverlay;
+            this.classList.toggle('active-toggle', showGridOverlay);
             renderTessellation();
-            autoFitPreviewToViewport();
+        };
+
+        document.getElementById('chkHDView').onchange = () => {
+            renderTessellation();
         };
 
         document.getElementById('tileImageUpload').addEventListener('change', (e) => {
@@ -1331,7 +1355,7 @@
         if (!activePattern) return;
         const cols = parseInt(document.getElementById('gridCols').value) || 8;
         const rows = parseInt(document.getElementById('gridRows').value) || 6;
-        const tileSize = currentBlockSize;
+        const tileSize = getGridSize();
         const currentBg = document.getElementById('bgColor').value;
 
         const outputCanvas = document.getElementById('tessellationOutput');
@@ -1367,6 +1391,27 @@
                     oCtx.drawImage(sourceTileImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize);
                     oCtx.restore();
                 }
+            }
+
+            if (showGridOverlay) {
+                oCtx.save();
+                oCtx.strokeStyle = "#000000"; 
+                oCtx.lineWidth = 1.5;         
+                
+                for (let c = 0; c <= cols; c++) {
+                    oCtx.beginPath();
+                    oCtx.moveTo(c * tileSize, 0);
+                    oCtx.lineTo(c * tileSize, outputCanvas.height);
+                    oCtx.stroke();
+                }
+                
+                for (let r = 0; r <= rows; r++) {
+                    oCtx.beginPath();
+                    oCtx.moveTo(0, r * tileSize);
+                    oCtx.lineTo(outputCanvas.width, r * tileSize);
+                    oCtx.stroke();
+                }
+                oCtx.restore();
             }
         };
     }
@@ -1452,22 +1497,16 @@
 
         let defaultPxWidth = 1000;
         let defaultPxHeight = 1000;
-        let isUpdatingFields = false;
-
-        function getGridAspectRatio() {
-            const cols = parseInt(document.getElementById('gridCols').value) || 8;
-            const rows = parseInt(document.getElementById('gridRows').value) || 6;
-            return cols / rows; // สัดส่วน Width / Height
-        }
+        let aspectRatio = 1; // Width / Height
 
         function updateExportFields() {
-            isUpdatingFields = true;
             const cols = parseInt(document.getElementById('gridCols').value) || 8;
             const rows = parseInt(document.getElementById('gridRows').value) || 6;
-            const tileSize = 100; // ค่าพื้นฐานสำหรับคำนวณ
+            const tileSize = getGridSize();
 
             defaultPxWidth = cols * tileSize;
             defaultPxHeight = rows * tileSize;
+            aspectRatio = defaultPxWidth / defaultPxHeight;
 
             const unit = unitSelect.value;
             const ppi = parseFloat(ppiSelect.value);
@@ -1482,7 +1521,6 @@
                 widthInput.value = ((defaultPxWidth / ppi) * 2.54).toFixed(2);
                 heightInput.value = ((defaultPxHeight / ppi) * 2.54).toFixed(2);
             }
-            isUpdatingFields = false;
             recalculatePxInfo();
         }
 
@@ -1506,37 +1544,6 @@
             resText.textContent = `${finalPxW} x ${finalPxH} px (${ppi} PPI)`;
         }
 
-        // ล็อกสัดส่วนอัตโนมัติเมื่อผู้ใช้แก้ไข Width หรือ Height
-        widthInput.oninput = function() {
-            if (isUpdatingFields) return;
-            isUpdatingFields = true;
-            const ratio = getGridAspectRatio();
-            const w = parseFloat(this.value);
-            if (!isNaN(w) && w > 0) {
-                const calculatedH = w / ratio;
-                heightInput.value = Number.isInteger(calculatedH) ? calculatedH : calculatedH.toFixed(2);
-            } else {
-                heightInput.value = '';
-            }
-            isUpdatingFields = false;
-            recalculatePxInfo();
-        };
-
-        heightInput.oninput = function() {
-            if (isUpdatingFields) return;
-            isUpdatingFields = true;
-            const ratio = getGridAspectRatio();
-            const h = parseFloat(this.value);
-            if (!isNaN(h) && h > 0) {
-                const calculatedW = h * ratio;
-                widthInput.value = Number.isInteger(calculatedW) ? calculatedW : calculatedW.toFixed(2);
-            } else {
-                widthInput.value = '';
-            }
-            isUpdatingFields = false;
-            recalculatePxInfo();
-        };
-
         document.getElementById('btnOpenSaveModal').onclick = () => {
             modal.style.display = 'flex';
             updateExportFields();
@@ -1548,6 +1555,26 @@
 
         ppiSelect.onchange = updateExportFields;
         unitSelect.onchange = updateExportFields;
+
+        widthInput.oninput = () => {
+            let val = parseFloat(widthInput.value);
+            if (!isNaN(val) && val > 0 && aspectRatio > 0) {
+                const calculatedHeight = val / aspectRatio;
+                const unit = unitSelect.value;
+                heightInput.value = (unit === 'px') ? Math.round(calculatedHeight) : parseFloat(calculatedHeight.toFixed(2));
+            }
+            recalculatePxInfo();
+        };
+
+        heightInput.oninput = () => {
+            let val = parseFloat(heightInput.value);
+            if (!isNaN(val) && val > 0 && aspectRatio > 0) {
+                const calculatedWidth = val * aspectRatio;
+                const unit = unitSelect.value;
+                widthInput.value = (unit === 'px') ? Math.round(calculatedWidth) : parseFloat(calculatedWidth.toFixed(2));
+            }
+            recalculatePxInfo();
+        };
 
         document.getElementById('btnConfirmSaveImage').onclick = () => {
             const unit = unitSelect.value;
@@ -1606,6 +1633,27 @@
                     eCtx.drawImage(sourceTileImg, -tileSizeX/2, -tileSizeY/2, tileSizeX, tileSizeY);
                     eCtx.restore();
                 }
+            }
+
+            if (showGridOverlay) {
+                eCtx.save();
+                eCtx.strokeStyle = "#000000"; 
+                eCtx.lineWidth = Math.max(1, Math.round(targetWidth / 1000 * 1.5));         
+                
+                for (let c = 0; c <= cols; c++) {
+                    eCtx.beginPath();
+                    eCtx.moveTo(c * tileSizeX, 0);
+                    eCtx.lineTo(c * tileSizeX, exportCanvas.height);
+                    eCtx.stroke();
+                }
+                
+                for (let r = 0; r <= rows; r++) {
+                    eCtx.beginPath();
+                    eCtx.moveTo(0, r * tileSizeY);
+                    eCtx.lineTo(exportCanvas.width, r * tileSizeY);
+                    eCtx.stroke();
+                }
+                eCtx.restore();
             }
 
             const link = document.createElement('a');
