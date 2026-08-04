@@ -211,9 +211,12 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
-margin-top: 10px;
+            margin-top: 15px;
             margin-bottom: 15px;
             user-select: none;
+            background: transparent;
+            padding: 0;
+            border: none;
         }
         .checkbox-row input[type="checkbox"] {
             width: 18px;
@@ -324,17 +327,39 @@ margin-top: 10px;
         .export-form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
         .export-input-row { display: flex; gap: 10px; align-items: center; }
 
-        /* --- Crop Modal Layout Optimized (Desktop Focus) --- */
+        /* --- Crop Modal Layout Optimized --- */
         .crop-box { 
-            background: white; padding: 30px; border-radius: 16px; 
-            max-width: 1400px; width: 95%; text-align: center; position: relative;
+            background: white; padding: 25px; border-radius: 16px; 
+            max-width: 1200px; width: 95%; text-align: center; position: relative;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
         }
         .crop-preview-container { 
-            height: 800px; max-height: 80vh; margin: 20px 0; background: #f8fafc; 
+            height: 500px; max-height: 55vh; margin: 15px 0; background: #f8fafc; 
             position: relative; overflow: hidden; border-radius: 8px; border: 1px solid #e2e8f0;
         }
         #cropImageTag { max-width: 100%; display: block; }
+
+        .pixel-settings-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #f1f5f9;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .pixel-settings-bar label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+        }
+        .pixel-settings-bar select {
+            width: auto;
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
 
         /* ==========================================================================
            --- MOBILE & TABLET RESPONSIVE STYLE (max-width: 991px) ---
@@ -376,6 +401,13 @@ margin-top: 10px;
             #tabGridExpansion { padding: 4px 5px; }
             .tool-group .tool-row { margin-bottom: 14px; }
 
+            /* สไตล์ข้อความของ Checkbox บนมือถือ */
+            .checkbox-row span {
+                font-size: 0.78rem;
+                font-weight: normal;
+                color: #64748b;
+            }
+
             .studio-layout-container {
                 grid-template-columns: 55px 1fr 65px; gap: 8px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
             }
@@ -413,7 +445,7 @@ margin-top: 10px;
 
             /* Crop Box Mobile override */
             .crop-box { padding: 15px; }
-            .crop-preview-container { height: 300px; margin: 10px 0; }
+            .crop-preview-container { height: 250px; margin: 10px 0; }
         }
     </style>
 </head>
@@ -510,7 +542,7 @@ margin-top: 10px;
 
                     <label class="checkbox-row">
                         <input type="checkbox" id="chkHDView">
-                        <span>High preview</span>
+                        <span>พรีวิวแบบละเอียด (HD View)</span>
                     </label>
                 </div>
 
@@ -626,7 +658,7 @@ margin-top: 10px;
         <h3 style="margin-top:0; color: var(--primary-color);">Export Image Settings</h3>
         
         <div class="export-form-group">
-            <label>PPI Resolution </label>
+            <label>PPI Resolution (DPI)</label>
             <select id="exportPPI">
                 <option value="72">72 PPI (Screen/Web)</option>
                 <option value="150">150 PPI (Medium Quality Print)</option>
@@ -673,14 +705,33 @@ margin-top: 10px;
         <button class="modal-close-btn" id="btnModalXClose" title="Close Without Saving">
             <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
-        <h3>Adjust Image Area Selection</h3>
-        <p style="font-size:0.85rem; color:#64748b;">An uploaded image asset is detected. Adjust the box to select and scale your square section (Use Mouse Scroll to Zoom / Drag to Pan).</p>
+        <h3 style="margin-top: 0; color: var(--primary-color);">Adjust Image & Pixelate Settings</h3>
+        <p style="font-size:0.85rem; color:#64748b; margin-bottom: 12px;">ปรับพื้นที่รูปภาพ และเลือกความละเอียดในการเติมสีเต็ม Pixel ได้ตามต้องการ</p>
+        
+        <div class="pixel-settings-bar">
+            <label for="pixelDensitySelect">ความละเอียด Pixel:</label>
+            <select id="pixelDensitySelect">
+                <option value="16">16 x 16 (พิกเซลใหญ่)</option>
+                <option value="32" selected>32 x 32 (พิกเซลปานกลาง)</option>
+                <option value="64">64 x 64 (พิกเซลละเอียด)</option>
+                <option value="128">128 x 128 (พิกเซลสูง)</option>
+            </select>
+        </div>
+
         <div class="crop-preview-container">
             <img id="cropImageTag" src="" alt="preview">
         </div>
-        <div style="display:flex; gap:10px; justify-content: center;">
-            <button class="btn-outline" id="btnCropSquare" style="background:var(--primary-color); color:white;">Confirm Square Crop (1:1)</button>
-            <button class="btn-outline" id="btnCropNone">Keep Original Aspect (Stretch/Fit)</button>
+
+        <div style="display:flex; gap:10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-outline" id="btnPixelateAndFill" style="background:#0284c7; color:white; font-weight:600;">
+                เติมสีเต็ม Pixel (Pixelate & Fill)
+            </button>
+            <button class="btn-outline" id="btnCropSquare" style="background:var(--primary-color); color:white;">
+                Confirm Square Crop (1:1)
+            </button>
+            <button class="btn-outline" id="btnCropNone">
+                Keep Original Aspect
+            </button>
         </div>
     </div>
 </div>
@@ -1156,6 +1207,45 @@ margin-top: 10px;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(croppedCanvas, 0, 0, canvas.width, canvas.height);
             saveCanvasState(); updateTilesFromCanvas();
+            closeCropModal();
+        };
+
+        // --- ระบบ Pixelate & Fill เติมสีพิกเซลเต็มบล็อก ---
+        document.getElementById('btnPixelateAndFill').onclick = () => {
+            let sourceCanvas;
+            if (cropper) {
+                sourceCanvas = cropper.getCroppedCanvas();
+            } else {
+                const img = document.getElementById('cropImageTag');
+                sourceCanvas = document.createElement('canvas');
+                sourceCanvas.width = img.naturalWidth || canvas.width;
+                sourceCanvas.height = img.naturalHeight || canvas.height;
+                const sCtx = sourceCanvas.getContext('2d');
+                sCtx.drawImage(img, 0, 0);
+            }
+
+            if (!sourceCanvas) return;
+
+            const pixelDensity = parseInt(document.getElementById('pixelDensitySelect').value) || 32;
+            
+            // สร้าง Canvas ขนาดย่อยสำหรับประมวลผล Pixelate
+            const offscreenCanvas = document.createElement('canvas');
+            offscreenCanvas.width = pixelDensity;
+            offscreenCanvas.height = pixelDensity;
+            const offCtx = offscreenCanvas.getContext('2d');
+            offCtx.imageSmoothingEnabled = false;
+
+            // ย่อรูปภาพลงให้เหลือขนาดเท่ากับ Pixel Density
+            offCtx.drawImage(sourceCanvas, 0, 0, pixelDensity, pixelDensity);
+
+            // ขยายภาพพิกเซลกลับขึ้นมาบน Main Canvas แบบไม่ให้เบลอ (Pixel-Art Filling Style)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(offscreenCanvas, 0, 0, pixelDensity, pixelDensity, 0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = true;
+
+            saveCanvasState();
+            updateTilesFromCanvas();
             closeCropModal();
         };
 
@@ -1653,7 +1743,7 @@ margin-top: 10px;
                 eCtx.restore();
             }
 
-          
+            // --- ส่วนรองรับการดาวน์โหลดบนมือถือ (Mobile-Friendly Download using Blob) ---
             exportCanvas.toBlob(function(blob) {
                 if (!blob) return;
                 const url = URL.createObjectURL(blob);
@@ -1671,7 +1761,7 @@ margin-top: 10px;
                     try {
                         a.click();
                     } catch (e) {
-                       window.open(url, '_blank');
+                        window.open(url, '_blank');
                     }
                     
                     setTimeout(() => {
