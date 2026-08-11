@@ -212,7 +212,7 @@
         .tool-group { margin-bottom: 20px; display: none; }
         .tool-group.active-tab { display: block; }
         .tool-group h4 { margin-top: 0; margin-bottom: 15px; color: var(--primary-color); }
-        .tool-row { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .tool-row { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
         .tool-row label { font-size: 0.85rem; width: 100px; color: #64748b; flex-shrink: 0; }
         .tool-row input[type="range"] { flex: 1; }
         .num-input { width: 60px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; }
@@ -269,9 +269,9 @@
         #tileCanvas { width: 100%; height: 100%; cursor: crosshair; touch-action: none; aspect-ratio: 1/1; display: block; }
         #tileGridOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
-        /* Outline Grid Icons 3x2 */
+        /* Tools Grid 4x2 */
         .tools-grid-3x2 {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;
         }
         .tool-btn-outline {
             height: 36px; background: transparent; border: 1px solid #cbd5e1; border-radius: 6px;
@@ -313,6 +313,14 @@
         
         #headerLayoutSelectWrapper { display: flex; flex: 1; justify-content: center; padding: 0 10px; }
         #headerActionButtonsWrapper { display: flex; gap: 8px; align-items: center; }
+
+        .pixelate-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
 
         /* Modals Common Style */
         .modal-overlay {
@@ -396,7 +404,7 @@
             .studio-center-col { display: flex; justify-content: center; align-items: center; width: 100%; }
             .canvas-container { width: 140px; height: 140px; border-radius: 6px; margin: 0 auto; }
             
-            .tools-grid-3x2 { gap: 4px; }
+            .tools-grid-3x2 { gap: 4px; grid-template-columns: repeat(3, 1fr); }
             .tool-btn-outline { height: 28px; padding: 2px; }
             .tool-btn-outline svg { width: 14px; height: 14px; }
             .line-size-horiz { margin-top: 3px; gap: 2px; }
@@ -526,38 +534,43 @@
                         <span>Show grid</span>
                     </label>
 
-                     <label class="checkbox-row">
+                    <label class="checkbox-row">
                         <input type="checkbox" id="chkShowSubGrid">
                         <span>Show sub-grid</span>
                     </label>
-
-                    <div class="tool-row">
-                        <label>Sub division</label>
-                        <input type="range" id="subGridDiv" value="10" min="2" max="100">
-                        <input type="number" id="subGridDivNum" class="num-input" value="10" min="2" max="100">
-                    </div>
                 </div>
 
                 <div class="tool-group" id="tabTileStudio">
                     <div class="tool-row" style="margin-bottom:8px;">
                         <input type="file" id="tileImageUpload" accept="image/*" style="font-size: 0.8rem; width:100%;">
                     </div>
-                    
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                        <label class="checkbox-row" style="margin: 0; white-space: nowrap;">
+
+                    <!-- Moved Pixelate System to Tile Studio -->
+                    <div class="pixelate-box">
+                        <label class="checkbox-row" style="margin: 0;">
                             <input type="checkbox" id="chkPixelate">
-                            <span>Pixelate</span>
+                            <span>Pixelate Mode</span>
                         </label>
-                        <div id="pixelateModeRow" style="display: none; align-items: center; gap: 5px; flex: 1; max-width: 220px;">
-                            <select id="pixelateModeSelect" style="padding: 4px 6px; font-size: 0.8rem; height: 30px; border-radius: 6px;">
-                                <option value="frequent" selected>Most Frequent (เยอะที่สุด)</option>
-                                <option value="average">Average (ค่าเฉลี่ย)</option>
-                                <option value="darkest">Darkest (เข้มที่สุด)</option>
-                                <option value="lightest">Lightest (อ่อนที่สุด)</option>
-                            </select>
+
+                        <div id="pixelateOptionsGroup" style="display: none; margin-top: 10px;">
+                            <div class="tool-row" style="margin-bottom: 8px;">
+                                <label style="width: 80px; font-size: 0.8rem;">Subdivision</label>
+                                <input type="range" id="subGridDiv" value="10" min="2" max="100">
+                                <input type="number" id="subGridDivNum" class="num-input" value="10" min="2" max="100">
+                            </div>
+
+                            <div class="tool-row" style="margin-bottom: 0;">
+                                <label style="width: 80px; font-size: 0.8rem;">Color Mode</label>
+                                <select id="pixelateModeSelect" style="font-size: 0.85rem; padding: 4px 8px;">
+                                    <option value="frequent" selected>Most Frequent (เยอะที่สุด)</option>
+                                    <option value="average">Average (ค่าเฉลี่ย)</option>
+                                    <option value="darkest">Darkest (เข้มที่สุด)</option>
+                                    <option value="lightest">Lightest (อ่อนที่สุด)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-
+                    
                     <div class="studio-layout-container">
                         
                         <div class="studio-left-col">
@@ -579,6 +592,10 @@
                                 </button>
                                 <button class="tool-btn-outline" id="btnBucketTool" data-tool="fill" title="Flood Paint Fill Bucket">
                                     <svg viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-4.3-7-11-7-11S5 10.7 5 15a7 7 0 0 0 7 7z"/></svg>
+                                </button>
+                                <!-- Added Eraser Tool -->
+                                <button class="tool-btn-outline" data-tool="eraser" title="Eraser">
+                                    <svg viewBox="0 0 24 24"><path d="M18 13l-5 5-10-10 5-5 10 10zM12 20h9"/></svg>
                                 </button>
                             </div>
 
@@ -810,13 +827,22 @@
     // Canvas Engine State
     const canvas = document.getElementById('tileCanvas');
     const ctx = canvas.getContext('2d');
+
+    // Layer System Canvases
+    const baseCanvas = document.createElement('canvas');
+    baseCanvas.width = 240; baseCanvas.height = 240;
+    const baseCtx = baseCanvas.getContext('2d');
+
+    const pixelOverlayCanvas = document.createElement('canvas');
+    pixelOverlayCanvas.width = 240; pixelOverlayCanvas.height = 240;
+    const pixelOverlayCtx = pixelOverlayCanvas.getContext('2d');
+
     let isDrawing = false;
     let startX = 0, startY = 0;
     let drawingHistory = [];
     let historyStep = -1;
     let isCtrlPressed = false;
     let canvasSnapshot = null;
-    let prePixelateSnapshot = null;
 
     // Zoom/Pan Matrix Controls
     let scale = 1;
@@ -839,7 +865,7 @@
             if (activeTab.id === 'tabGridExpansion') {
                 targetMaxHeight = '185px'; 
             } else if (activeTab.id === 'tabTileStudio') {
-                targetMaxHeight = '320px';
+                targetMaxHeight = '280px';
             }
             panel.style.maxHeight = targetMaxHeight;
         }
@@ -1009,14 +1035,17 @@
     }
 
     function setupCanvasDefault() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        canvas.style.backgroundColor = document.getElementById('bgColor').value;
-        ctx.font = "bold 130px sans-serif";
-        ctx.fillStyle = "#1e293b";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("P", canvas.width / 2, canvas.height / 2);
-        prePixelateSnapshot = null;
+        baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+        pixelOverlayCtx.clearRect(0, 0, pixelOverlayCanvas.width, pixelOverlayCanvas.height);
+
+        baseCanvas.style.backgroundColor = document.getElementById('bgColor').value;
+        baseCtx.font = "bold 130px sans-serif";
+        baseCtx.fillStyle = "#1e293b";
+        baseCtx.textAlign = "center";
+        baseCtx.textBaseline = "middle";
+        baseCtx.fillText("P", baseCanvas.width / 2, baseCanvas.height / 2);
+
+        renderCombinedTile();
         saveCanvasState();
     }
 
@@ -1032,8 +1061,8 @@
         });
     }
 
-    function floodFill(startX, startY, fillColor) {
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    function floodFill(targetCtx, targetCanvas, startX, startY, fillColor) {
+        const imageData = targetCtx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
         const data = imageData.data;
         const targetColor = getPixelColor(startX, startY);
         
@@ -1042,7 +1071,7 @@
         const queue = [[startX, startY]];
         while (queue.length > 0) {
             const [x, y] = queue.shift();
-            if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) continue;
+            if (x < 0 || x >= targetCanvas.width || y < 0 || y >= targetCanvas.height) continue;
 
             const currentColor = getPixelColor(x, y);
             if (colorsMatch(currentColor, targetColor)) {
@@ -1050,14 +1079,14 @@
                 queue.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
             }
         }
-        ctx.putImageData(imageData, 0, 0);
+        targetCtx.putImageData(imageData, 0, 0);
 
         function getPixelColor(x, y) {
-            const index = (y * canvas.width + x) * 4;
+            const index = (y * targetCanvas.width + x) * 4;
             return [data[index], data[index + 1], data[index + 2], data[index + 3]];
         }
         function setPixelColor(x, y, color) {
-            const index = (y * canvas.width + x) * 4;
+            const index = (y * targetCanvas.width + x) * 4;
             data[index] = color[0]; data[index + 1] = color[1]; data[index + 2] = color[2]; data[index + 3] = 255;
         }
         function colorsMatch(c1, c2) {
@@ -1185,31 +1214,6 @@
         }
     }
 
-    function applyPixelateToTileCanvas() {
-        const isPixelate = document.getElementById('chkPixelate').checked;
-        if (isPixelate) {
-            const subDiv = parseInt(document.getElementById('subGridDiv').value) || 10;
-            const pixelateMode = document.getElementById('pixelateModeSelect').value;
-            
-            if (!prePixelateSnapshot) {
-                prePixelateSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            } else {
-                ctx.putImageData(prePixelateSnapshot, 0, 0);
-            }
-            
-            applyPixelate(ctx, canvas.width, canvas.height, 1, 1, subDiv, pixelateMode);
-            saveCanvasState();
-        } else {
-            if (prePixelateSnapshot) {
-                ctx.putImageData(prePixelateSnapshot, 0, 0);
-                prePixelateSnapshot = null;
-                saveCanvasState();
-            }
-        }
-        renderTessellation();
-        renderTileGridOverlay();
-    }
-
     function bindEvents() {
         window.addEventListener('popstate', (e) => {
             if(document.getElementById('editorView').style.display === 'block') {
@@ -1232,15 +1236,16 @@
             renderTileGridOverlay();
         };
 
+        // Pixelate Mode Event Listeners in Tile Studio
         document.getElementById('chkPixelate').onchange = (e) => {
-            const modeRow = document.getElementById('pixelateModeRow');
-            if (modeRow) modeRow.style.display = e.target.checked ? 'flex' : 'none';
-            applyPixelateToTileCanvas();
+            const group = document.getElementById('pixelateOptionsGroup');
+            if (group) group.style.display = e.target.checked ? 'block' : 'none';
+            renderCombinedTile();
             adjustMobilePanelHeight();
         };
 
         document.getElementById('pixelateModeSelect').onchange = () => {
-            applyPixelateToTileCanvas();
+            renderCombinedTile();
         };
 
         const subSlider = document.getElementById('subGridDiv');
@@ -1248,24 +1253,14 @@
         if (subSlider && subNum) {
             subSlider.oninput = function() {
                 subNum.value = this.value;
-                if (document.getElementById('chkPixelate').checked) {
-                    applyPixelateToTileCanvas();
-                } else {
-                    renderTessellation();
-                    renderTileGridOverlay();
-                }
+                renderCombinedTile();
             };
             subNum.oninput = function() {
                 let val = parseInt(this.value) || 2;
                 val = Math.min(Math.max(2, val), 100);
                 subSlider.value = val;
                 this.value = val;
-                if (document.getElementById('chkPixelate').checked) {
-                    applyPixelateToTileCanvas();
-                } else {
-                    renderTessellation();
-                    renderTileGridOverlay();
-                }
+                renderCombinedTile();
             };
         }
 
@@ -1330,35 +1325,31 @@
             if (!cropper) return;
             cropper.clear();
             const fullCanvas = cropper.getCroppedCanvas();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(fullCanvas, 0, 0, canvas.width, canvas.height);
-            prePixelateSnapshot = null;
-            if (document.getElementById('chkPixelate').checked) {
-                applyPixelateToTileCanvas();
-            } else {
-                saveCanvasState(); updateTilesFromCanvas();
-            }
+            baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+            baseCtx.drawImage(fullCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
+            pixelOverlayCtx.clearRect(0, 0, pixelOverlayCanvas.width, pixelOverlayCanvas.height);
+            saveCanvasState(); renderCombinedTile();
             closeCropModal();
         };
 
         document.getElementById('btnCropSquare').onclick = () => {
             if (!cropper) return;
-            const croppedCanvas = cropper.getCroppedCanvas({ width: canvas.width, height: canvas.height });
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(croppedCanvas, 0, 0, canvas.width, canvas.height);
-            prePixelateSnapshot = null;
-            if (document.getElementById('chkPixelate').checked) {
-                applyPixelateToTileCanvas();
-            } else {
-                saveCanvasState(); updateTilesFromCanvas();
-            }
+            const croppedCanvas = cropper.getCroppedCanvas({ width: baseCanvas.width, height: baseCanvas.height });
+            baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+            baseCtx.drawImage(croppedCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
+            pixelOverlayCtx.clearRect(0, 0, pixelOverlayCanvas.width, pixelOverlayCanvas.height);
+            saveCanvasState(); renderCombinedTile();
             closeCropModal();
         };
 
         document.getElementById('btnUndo').onclick = () => { if (historyStep > 0) { historyStep--; restoreCanvasStep(); } };
         document.getElementById('btnRedo').onclick = () => { if (historyStep < drawingHistory.length - 1) { historyStep++; restoreCanvasStep(); } };
-        document.getElementById('btnClearCanvas').onclick = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); prePixelateSnapshot = null; saveCanvasState(); updateTilesFromCanvas(); };
-        document.getElementById('btnResetToP').onclick = () => { drawingHistory = []; historyStep = -1; setupCanvasDefault(); updateTilesFromCanvas(); };
+        document.getElementById('btnClearCanvas').onclick = () => { 
+            baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height); 
+            pixelOverlayCtx.clearRect(0, 0, pixelOverlayCanvas.width, pixelOverlayCanvas.height);
+            saveCanvasState(); renderCombinedTile(); 
+        };
+        document.getElementById('btnResetToP').onclick = () => { drawingHistory = []; historyStep = -1; setupCanvasDefault(); };
 
         function closeEditorRoutine() {
             currentImageUrl = canvas.toDataURL();
@@ -1395,7 +1386,7 @@
         
         document.getElementById('bgColor').oninput = () => {
             canvas.style.backgroundColor = document.getElementById('bgColor').value;
-            renderTessellation();
+            renderCombinedTile();
         };
 
         document.getElementById('btnBucketTool').onclick = () => {
@@ -1531,16 +1522,15 @@
         if(currentImageUrl) {
             const img = new Image();
             img.onload = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                drawingHistory = []; historyStep = -1; saveCanvasState(); renderTessellation();
-                renderTileGridOverlay();
+                baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+                baseCtx.drawImage(img, 0, 0, baseCanvas.width, baseCanvas.height);
+                pixelOverlayCtx.clearRect(0, 0, pixelOverlayCanvas.width, pixelOverlayCanvas.height);
+                drawingHistory = []; historyStep = -1; saveCanvasState(); renderCombinedTile();
                 autoFitPreviewToViewport();
             };
             img.src = currentImageUrl;
         } else {
-            drawingHistory = []; historyStep = -1; setupCanvasDefault(); renderTessellation();
-            renderTileGridOverlay();
+            drawingHistory = []; historyStep = -1; setupCanvasDefault();
             autoFitPreviewToViewport();
         }
         setupResponsiveLayoutEngine();
@@ -1624,7 +1614,7 @@
                         chosenColor = darkestColor;
                     } else if (pixelMode === 'lightest' && lightestColor) {
                         chosenColor = lightestColor;
-                    } else { // 'frequent' (Most Frequent / Dominant)
+                    } else { // 'frequent'
                         for (const [key, count] of Object.entries(colorCounts)) {
                             if (count === maxCount) {
                                 const [rVal, gVal, bVal] = key.split(',');
@@ -1639,6 +1629,40 @@
                 }
             }
         }
+    }
+
+    // Render Tile combining Base Layer and Pixel Overlay Layer
+    function renderCombinedTile() {
+        const isPixelate = document.getElementById('chkPixelate').checked;
+        const subDiv = parseInt(document.getElementById('subGridDiv').value) || 10;
+        const pixelateMode = document.getElementById('pixelateModeSelect').value;
+        const bgColor = document.getElementById('bgColor').value;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (isPixelate) {
+            // Render Base Image Pixelated
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = bgColor;
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(baseCanvas, 0, 0);
+
+            applyPixelate(tempCtx, tempCanvas.width, tempCanvas.height, 1, 1, subDiv, pixelateMode);
+
+            ctx.drawImage(tempCanvas, 0, 0);
+            // Draw separate pixel layer on top
+            ctx.drawImage(pixelOverlayCanvas, 0, 0);
+        } else {
+            // Non-pixelate mode: Draw original continuous base image
+            ctx.drawImage(baseCanvas, 0, 0);
+        }
+
+        renderTileGridOverlay();
+        renderTessellation();
     }
 
     function renderTessellation() {
@@ -1736,26 +1760,29 @@
         };
     }
 
-    function updateTilesFromCanvas() { renderTessellation(); }
+    function updateTilesFromCanvas() { renderCombinedTile(); }
 
     function drawPixelCell(x, y) {
         const subDiv = parseInt(document.getElementById('subGridDiv').value) || 10;
-        const cellW = canvas.width / subDiv;
-        const cellH = canvas.height / subDiv;
+        const cellW = pixelOverlayCanvas.width / subDiv;
+        const cellH = pixelOverlayCanvas.height / subDiv;
         const col = Math.floor(x / cellW);
         const row = Math.floor(y / cellH);
 
         if (col >= 0 && col < subDiv && row >= 0 && row < subDiv) {
-            if (selectedTool === 'fill') {
-                ctx.fillStyle = document.getElementById('bucketColor').value;
+            if (selectedTool === 'eraser') {
+                pixelOverlayCtx.clearRect(col * cellW, row * cellH, cellW, cellH);
+            } else if (selectedTool === 'fill') {
+                pixelOverlayCtx.fillStyle = document.getElementById('bucketColor').value;
+                pixelOverlayCtx.fillRect(col * cellW, row * cellH, cellW, cellH);
             } else {
                 const useFill = document.getElementById('chkUseFill').checked;
                 const useStroke = document.getElementById('chkUseStroke').checked;
-                ctx.fillStyle = useFill ? document.getElementById('fillColor').value :
+                pixelOverlayCtx.fillStyle = useFill ? document.getElementById('fillColor').value :
                                (useStroke ? document.getElementById('strokeColor').value : document.getElementById('bgColor').value);
+                pixelOverlayCtx.fillRect(col * cellW, row * cellH, cellW, cellH);
             }
-            ctx.fillRect(col * cellW, row * cellH, cellW, cellH);
-            updateTilesFromCanvas();
+            renderCombinedTile();
         }
     }
 
@@ -1772,21 +1799,30 @@
             return;
         }
 
-        if (selectedTool === 'fill') {
-            const paintColor = hexToRgb(document.getElementById('bucketColor').value);
-            floodFill(Math.floor(startX), Math.floor(startY), paintColor);
-            saveCanvasState(); updateTilesFromCanvas(); return;
+        isDrawing = true;
+        if (selectedTool === 'eraser') {
+            baseCtx.save();
+            baseCtx.globalCompositeOperation = 'destination-out';
+            baseCtx.lineWidth = selectedLineWidth;
+            baseCtx.lineCap = "round"; baseCtx.lineJoin = "round";
+            baseCtx.beginPath(); baseCtx.moveTo(startX, startY);
+            return;
         }
 
-        isDrawing = true;
-        canvasSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        ctx.lineWidth = selectedLineWidth;
-        ctx.strokeStyle = document.getElementById('strokeColor').value;
-        ctx.fillStyle = document.getElementById('fillColor').value;
-        ctx.lineCap = "round"; ctx.lineJoin = "round";
+        if (selectedTool === 'fill') {
+            const paintColor = hexToRgb(document.getElementById('bucketColor').value);
+            floodFill(baseCtx, baseCanvas, Math.floor(startX), Math.floor(startY), paintColor);
+            saveCanvasState(); renderCombinedTile(); isDrawing = false; return;
+        }
+
+        canvasSnapshot = baseCtx.getImageData(0, 0, baseCanvas.width, baseCanvas.height);
+        baseCtx.lineWidth = selectedLineWidth;
+        baseCtx.strokeStyle = document.getElementById('strokeColor').value;
+        baseCtx.fillStyle = document.getElementById('fillColor').value;
+        baseCtx.lineCap = "round"; baseCtx.lineJoin = "round";
 
         if (selectedTool === 'brush' && document.getElementById('chkUseStroke').checked) {
-            ctx.beginPath(); ctx.moveTo(startX, startY);
+            baseCtx.beginPath(); baseCtx.moveTo(startX, startY);
         }
     }
 
@@ -1803,14 +1839,21 @@
             return;
         }
 
+        if (selectedTool === 'eraser') {
+            baseCtx.lineTo(currentX, currentY);
+            baseCtx.stroke();
+            renderCombinedTile();
+            return;
+        }
+
         const useFill = document.getElementById('chkUseFill').checked;
         const useStroke = document.getElementById('chkUseStroke').checked;
 
         if (selectedTool === 'brush') {
-            if (useStroke) { ctx.lineTo(currentX, currentY); ctx.stroke(); }
+            if (useStroke) { baseCtx.lineTo(currentX, currentY); baseCtx.stroke(); }
         } else if (selectedTool !== 'fill') {
-            ctx.putImageData(canvasSnapshot, 0, 0);
-            ctx.beginPath();
+            baseCtx.putImageData(canvasSnapshot, 0, 0);
+            baseCtx.beginPath();
             let width = currentX - startX; let height = currentY - startY;
 
             if (isCtrlPressed) {
@@ -1819,40 +1862,46 @@
             }
 
             if (selectedTool === 'line') {
-                if (useStroke) { ctx.moveTo(startX, startY); ctx.lineTo(currentX, currentY); ctx.stroke(); }
+                if (useStroke) { baseCtx.moveTo(startX, startY); baseCtx.lineTo(currentX, currentY); baseCtx.stroke(); }
             } else if (selectedTool === 'rect') {
-                ctx.rect(startX, startY, width, height);
-                if (useFill) ctx.fill(); if (useStroke) ctx.stroke();
+                baseCtx.rect(startX, startY, width, height);
+                if (useFill) baseCtx.fill(); if (useStroke) baseCtx.stroke();
             } else if (selectedTool === 'circle') {
                 const radius = Math.sqrt(width * width + height * height);
-                ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
-                if (useFill) ctx.fill(); if (useStroke) ctx.stroke();
+                baseCtx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                if (useFill) baseCtx.fill(); if (useStroke) baseCtx.stroke();
             } else if (selectedTool === 'triangle') {
-                ctx.moveTo(startX + width / 2, startY); ctx.lineTo(startX + width, startY + height); ctx.lineTo(startX, startY + height); ctx.closePath();
-                if (useFill) ctx.fill(); if (useStroke) ctx.stroke();
+                baseCtx.moveTo(startX + width / 2, startY); baseCtx.lineTo(startX + width, startY + height); baseCtx.lineTo(startX, startY + height); baseCtx.closePath();
+                if (useFill) baseCtx.fill(); if (useStroke) baseCtx.stroke();
             }
         }
-        updateTilesFromCanvas();
+        renderCombinedTile();
     }
 
     function stopDrawing() { 
         if (!isDrawing) return; 
+        if (selectedTool === 'eraser' && !document.getElementById('chkPixelate').checked) {
+            baseCtx.restore();
+        }
         isDrawing = false; 
-        prePixelateSnapshot = null;
         saveCanvasState(); 
     }
 
     function saveCanvasState() {
         if (historyStep < drawingHistory.length - 1) drawingHistory = drawingHistory.slice(0, historyStep + 1);
-        drawingHistory.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        drawingHistory.push({
+            base: baseCtx.getImageData(0, 0, baseCanvas.width, baseCanvas.height),
+            pixel: pixelOverlayCtx.getImageData(0, 0, pixelOverlayCanvas.width, pixelOverlayCanvas.height)
+        });
         historyStep++;
     }
 
     function restoreCanvasStep() { 
         if (historyStep >= 0 && historyStep < drawingHistory.length) { 
-            ctx.putImageData(drawingHistory[historyStep], 0, 0); 
-            prePixelateSnapshot = null;
-            updateTilesFromCanvas(); 
+            const state = drawingHistory[historyStep];
+            baseCtx.putImageData(state.base, 0, 0);
+            pixelOverlayCtx.putImageData(state.pixel, 0, 0);
+            renderCombinedTile(); 
         } 
     }
 
@@ -2029,7 +2078,7 @@
                 for (let r = 0; r <= totalSubRows; r++) {
                     eCtx.beginPath();
                     eCtx.moveTo(0, r * subH);
-                    eCtx.lineTo(exportCanvas.width, r * subH);
+                    eCtx.lineTo(0, exportCanvas.height);
                     eCtx.stroke();
                 }
                 eCtx.restore();
