@@ -536,21 +536,6 @@
                         <input type="range" id="subGridDiv" value="10" min="2" max="100">
                         <input type="number" id="subGridDivNum" class="num-input" value="10" min="2" max="100">
                     </div>
-
-                    <label class="checkbox-row">
-                        <input type="checkbox" id="chkPixelate">
-                        <span>Pixelate</span>
-                    </label>
-
-                    <div class="tool-row" id="pixelateModeRow" style="display: none; margin-top: -5px; margin-bottom: 15px;">
-                        <label style="width: 110px;">Color Strategy</label>
-                        <select id="pixelateModeSelect">
-                            <option value="frequent" selected>Most Frequent (เยอะที่สุด)</option>
-                            <option value="average">Average (ค่าเฉลี่ย)</option>
-                            <option value="darkest">Darkest (เข้มที่สุด)</option>
-                            <option value="lightest">Lightest (อ่อนที่สุด)</option>
-                        </select>
-                    </div>
                 </div>
 
                 <div class="tool-group" id="tabTileStudio">
@@ -558,6 +543,21 @@
                         <input type="file" id="tileImageUpload" accept="image/*" style="font-size: 0.8rem; width:100%;">
                     </div>
                     
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <label class="checkbox-row" style="margin: 0; white-space: nowrap;">
+                            <input type="checkbox" id="chkPixelate">
+                            <span>Pixelate</span>
+                        </label>
+                        <div id="pixelateModeRow" style="display: none; align-items: center; gap: 5px; flex: 1; max-width: 220px;">
+                            <select id="pixelateModeSelect" style="padding: 4px 6px; font-size: 0.8rem; height: 30px; border-radius: 6px;">
+                                <option value="frequent" selected>Most Frequent (เยอะที่สุด)</option>
+                                <option value="average">Average (ค่าเฉลี่ย)</option>
+                                <option value="darkest">Darkest (เข้มที่สุด)</option>
+                                <option value="lightest">Lightest (อ่อนที่สุด)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="studio-layout-container">
                         
                         <div class="studio-left-col">
@@ -816,6 +816,7 @@
     let historyStep = -1;
     let isCtrlPressed = false;
     let canvasSnapshot = null;
+    let prePixelateSnapshot = null;
 
     // Zoom/Pan Matrix Controls
     let scale = 1;
@@ -836,7 +837,9 @@
         if (panel && activeTab) {
             let targetMaxHeight = '245px';
             if (activeTab.id === 'tabGridExpansion') {
-                targetMaxHeight = '210px'; 
+                targetMaxHeight = '185px'; 
+            } else if (activeTab.id === 'tabTileStudio') {
+                targetMaxHeight = '320px';
             }
             panel.style.maxHeight = targetMaxHeight;
         }
@@ -1013,6 +1016,7 @@
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("P", canvas.width / 2, canvas.height / 2);
+        prePixelateSnapshot = null;
         saveCanvasState();
     }
 
@@ -1181,6 +1185,31 @@
         }
     }
 
+    function applyPixelateToTileCanvas() {
+        const isPixelate = document.getElementById('chkPixelate').checked;
+        if (isPixelate) {
+            const subDiv = parseInt(document.getElementById('subGridDiv').value) || 10;
+            const pixelateMode = document.getElementById('pixelateModeSelect').value;
+            
+            if (!prePixelateSnapshot) {
+                prePixelateSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.putImageData(prePixelateSnapshot, 0, 0);
+            }
+            
+            applyPixelate(ctx, canvas.width, canvas.height, 1, 1, subDiv, pixelateMode);
+            saveCanvasState();
+        } else {
+            if (prePixelateSnapshot) {
+                ctx.putImageData(prePixelateSnapshot, 0, 0);
+                prePixelateSnapshot = null;
+                saveCanvasState();
+            }
+        }
+        renderTessellation();
+        renderTileGridOverlay();
+    }
+
     function bindEvents() {
         window.addEventListener('popstate', (e) => {
             if(document.getElementById('editorView').style.display === 'block') {
@@ -1206,13 +1235,12 @@
         document.getElementById('chkPixelate').onchange = (e) => {
             const modeRow = document.getElementById('pixelateModeRow');
             if (modeRow) modeRow.style.display = e.target.checked ? 'flex' : 'none';
-            renderTessellation();
-            renderTileGridOverlay();
+            applyPixelateToTileCanvas();
             adjustMobilePanelHeight();
         };
 
         document.getElementById('pixelateModeSelect').onchange = () => {
-            renderTessellation();
+            applyPixelateToTileCanvas();
         };
 
         const subSlider = document.getElementById('subGridDiv');
@@ -1220,16 +1248,24 @@
         if (subSlider && subNum) {
             subSlider.oninput = function() {
                 subNum.value = this.value;
-                renderTessellation();
-                renderTileGridOverlay();
+                if (document.getElementById('chkPixelate').checked) {
+                    applyPixelateToTileCanvas();
+                } else {
+                    renderTessellation();
+                    renderTileGridOverlay();
+                }
             };
             subNum.oninput = function() {
                 let val = parseInt(this.value) || 2;
                 val = Math.min(Math.max(2, val), 100);
                 subSlider.value = val;
                 this.value = val;
-                renderTessellation();
-                renderTileGridOverlay();
+                if (document.getElementById('chkPixelate').checked) {
+                    applyPixelateToTileCanvas();
+                } else {
+                    renderTessellation();
+                    renderTileGridOverlay();
+                }
             };
         }
 
@@ -1296,7 +1332,12 @@
             const fullCanvas = cropper.getCroppedCanvas();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(fullCanvas, 0, 0, canvas.width, canvas.height);
-            saveCanvasState(); updateTilesFromCanvas();
+            prePixelateSnapshot = null;
+            if (document.getElementById('chkPixelate').checked) {
+                applyPixelateToTileCanvas();
+            } else {
+                saveCanvasState(); updateTilesFromCanvas();
+            }
             closeCropModal();
         };
 
@@ -1305,13 +1346,18 @@
             const croppedCanvas = cropper.getCroppedCanvas({ width: canvas.width, height: canvas.height });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(croppedCanvas, 0, 0, canvas.width, canvas.height);
-            saveCanvasState(); updateTilesFromCanvas();
+            prePixelateSnapshot = null;
+            if (document.getElementById('chkPixelate').checked) {
+                applyPixelateToTileCanvas();
+            } else {
+                saveCanvasState(); updateTilesFromCanvas();
+            }
             closeCropModal();
         };
 
         document.getElementById('btnUndo').onclick = () => { if (historyStep > 0) { historyStep--; restoreCanvasStep(); } };
         document.getElementById('btnRedo').onclick = () => { if (historyStep < drawingHistory.length - 1) { historyStep++; restoreCanvasStep(); } };
-        document.getElementById('btnClearCanvas').onclick = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); saveCanvasState(); updateTilesFromCanvas(); };
+        document.getElementById('btnClearCanvas').onclick = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); prePixelateSnapshot = null; saveCanvasState(); updateTilesFromCanvas(); };
         document.getElementById('btnResetToP').onclick = () => { drawingHistory = []; historyStep = -1; setupCanvasDefault(); updateTilesFromCanvas(); };
 
         function closeEditorRoutine() {
@@ -1605,8 +1651,6 @@
 
         const showMainGrid = document.getElementById('chkShowGrid').checked;
         const showSubGrid = document.getElementById('chkShowSubGrid').checked;
-        const isPixelate = document.getElementById('chkPixelate').checked;
-        const pixelateMode = document.getElementById('pixelateModeSelect').value;
 
         const outputCanvas = document.getElementById('tessellationOutput');
         if (!outputCanvas) return;
@@ -1641,10 +1685,6 @@
                     oCtx.drawImage(sourceTileImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize);
                     oCtx.restore();
                 }
-            }
-
-            if (isPixelate) {
-                applyPixelate(oCtx, outputCanvas.width, outputCanvas.height, cols, rows, subDiv, pixelateMode);
             }
 
             if (showSubGrid && subDiv > 1) {
@@ -1795,13 +1835,26 @@
         updateTilesFromCanvas();
     }
 
-    function stopDrawing() { if (!isDrawing) return; isDrawing = false; saveCanvasState(); }
+    function stopDrawing() { 
+        if (!isDrawing) return; 
+        isDrawing = false; 
+        prePixelateSnapshot = null;
+        saveCanvasState(); 
+    }
+
     function saveCanvasState() {
         if (historyStep < drawingHistory.length - 1) drawingHistory = drawingHistory.slice(0, historyStep + 1);
         drawingHistory.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
         historyStep++;
     }
-    function restoreCanvasStep() { if (historyStep >= 0 && historyStep < drawingHistory.length) { ctx.putImageData(drawingHistory[historyStep], 0, 0); updateTilesFromCanvas(); } }
+
+    function restoreCanvasStep() { 
+        if (historyStep >= 0 && historyStep < drawingHistory.length) { 
+            ctx.putImageData(drawingHistory[historyStep], 0, 0); 
+            prePixelateSnapshot = null;
+            updateTilesFromCanvas(); 
+        } 
+    }
 
     /* --- System logic for Export Modal & Advanced Image Saving --- */
     function setupSaveExportModal() {
@@ -1923,8 +1976,6 @@
 
         const showMainGrid = document.getElementById('chkShowGrid').checked;
         const showSubGrid = document.getElementById('chkShowSubGrid').checked;
-        const isPixelate = document.getElementById('chkPixelate').checked;
-        const pixelateMode = document.getElementById('pixelateModeSelect').value;
 
         const exportCanvas = document.createElement('canvas');
         exportCanvas.width = targetWidth; 
@@ -1956,10 +2007,6 @@
                     eCtx.drawImage(sourceTileImg, -tileSizeX/2, -tileSizeY/2, tileSizeX, tileSizeY);
                     eCtx.restore();
                 }
-            }
-
-            if (isPixelate) {
-                applyPixelate(eCtx, exportCanvas.width, exportCanvas.height, cols, rows, subDiv, pixelateMode);
             }
 
             if (showSubGrid && subDiv > 1) {
