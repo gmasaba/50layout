@@ -204,6 +204,25 @@
             position: relative;
             transition: transform 0.3s ease;
         }
+        .panel-resizer {
+            display: none;
+        }
+
+        @media (min-width: 992px) {
+            .panel-resizer {
+                display: block;
+                position: absolute;
+                top: 0; left: -4px; width: 8px; height: 100%;
+                cursor: col-resize;
+                z-index: 100;
+                background: transparent;
+                transition: background 0.2s;
+            }
+            .panel-resizer:hover, .panel-resizer.is-resizing {
+                background: #cbd5e1;
+            }
+        }
+
         .panel-content { flex: 1; overflow-y: auto; padding: 20px; }
         .desktop-tab-toggle { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
         .desktop-tab-btn { flex: 1; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-weight: 600; color: #64748b; }
@@ -259,11 +278,11 @@
             margin-top: 15px;
         }
         .studio-left-col { display: flex; flex-direction: column; gap: 10px; justify-content: center; }
-        .studio-center-col { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .studio-center-col { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
         .studio-right-col { display: flex; flex-direction: column; gap: 12px; font-size: 0.8rem; color: #64748b; justify-content: center; }
 
         .canvas-container {
-            position: relative; width: 230px; height: 230px; 
+            position: relative; width: 100%; height: auto; aspect-ratio: 1/1; 
             border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;
         }
         #tileCanvas { width: 100%; height: 100%; cursor: crosshair; touch-action: none; aspect-ratio: 1/1; display: block; }
@@ -480,6 +499,7 @@
         </div>
 
         <div class="tools-panel" id="toolsPanel">
+            <div id="panelResizer" class="panel-resizer"></div>
             <div class="panel-content">
                 <div style="margin-bottom: 15px;" id="desktopPanelRulesZone">
                     <label style="font-size:0.85rem; font-weight:600; color:var(--primary-color); display:block; margin-bottom:6px;">Layout Rules</label>
@@ -547,10 +567,10 @@
                         </label>
                         <div id="pixelateModeRow" style="display: none; align-items:center; gap:4px;">
                             <select id="pixelateModeSelect" style="padding:2px 6px; font-size:0.75rem; width:auto; border-radius:4px; height:26px;">
-                                <option value="frequent" selected>Most Frequent (เยอะที่สุด)</option>
-                                <option value="average">Average (ค่าเฉลี่ย)</option>
-                                <option value="darkest">Darkest (เข้มที่สุด)</option>
-                                <option value="lightest">Lightest (อ่อนที่สุด)</option>
+                                <option value="frequent" selected>Most Frequent</option>
+                                <option value="average">Average</option>
+                                <option value="darkest">Darkest</option>
+                                <option value="lightest">Lightest</option>
                             </select>
                         </div>
                     </div>
@@ -563,25 +583,25 @@
                         
                         <div class="studio-left-col">
                             <div class="tools-grid-3x2" id="toolsGrid">
-                                <button class="tool-btn-outline active" data-tool="brush" title="Pencil Free Brush">
+                                <button class="tool-btn-outline active" data-tool="brush" title="Free Brush">
                                     <svg viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                 </button>
-                                <button class="tool-btn-outline" data-tool="eraser" title="Eraser (ยางลบ)">
+                                <button class="tool-btn-outline" data-tool="eraser" title="Erase">
                                     <svg viewBox="0 0 24 24"><path d="M18.85 3.85a2.5 2.5 0 0 0-3.54 0L3.85 15.31a2.5 2.5 0 0 0 0 3.54l3.3 3.3a2.5 2.5 0 0 0 3.54 0L22.15 10.7a2.5 2.5 0 0 0 0-3.54l-3.3-3.31zM9.27 20.73L4.56 16.02l8.2-8.2 4.71 4.71-8.2 8.2z"/></svg>
                                 </button>
-                                <button class="tool-btn-outline" data-tool="line" title="Straight Vector Line">
+                                <button class="tool-btn-outline" data-tool="line" title="Line">
                                     <svg viewBox="0 0 24 24"><path d="M5 19L19 5M5 5h.01M19 19h.01"/></svg>
                                 </button>
-                                <button class="tool-btn-outline" data-tool="rect" title="Rectangle Shape">
+                                <button class="tool-btn-outline" data-tool="rect" title="Rectangle">
                                     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
                                 </button>
-                                <button class="tool-btn-outline" data-tool="circle" title="Perfect Circle Shape">
+                                <button class="tool-btn-outline" data-tool="circle" title="Circle">
                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
                                 </button>
-                                <button class="tool-btn-outline" data-tool="triangle" title="Triangle Mesh">
+                                <button class="tool-btn-outline" data-tool="triangle" title="Triangle">
                                     <svg viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z"/></svg>
                                 </button>
-                                <button class="tool-btn-outline" id="btnBucketTool" data-tool="fill" title="Flood Paint Fill Bucket">
+                                <button class="tool-btn-outline" id="btnBucketTool" data-tool="fill" title="Bucket">
                                     <svg viewBox="0 0 24 24"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2a2 2 0 0 0 2.8 0L19 11z"/><path d="m5 2 5 5"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4z"/></svg>
                                 </button>
                             </div>
@@ -628,20 +648,26 @@
                     </div>
 
                     <div class="canvas-actions-row">
-                        <button class="btn-outline" id="btnUndo" title="Undo Step">
+                        <button class="btn-outline" id="btnUndo" title="Undo">
                             <svg viewBox="0 0 24 24"><path d="M3 7v6h6M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
                         </button>
-                        <button class="btn-outline" id="btnRedo" title="Redo Step">
+                        <button class="btn-outline" id="btnRedo" title="Redo">
                             <svg viewBox="0 0 24 24"><path d="M21 7v6h-6M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 4"/></svg>
                         </button>
-                        <button class="btn-outline" id="btnClearPaint" title="Clear Drawn Paint Layer (เคลียร์สีที่วาด)">
-                            <svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z"/><path d="m9 9 6 6M15 9l-6 6"/></svg>
+                        <button class="btn-outline" id="btnClearPaint" title="Clear Paint">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                <path d="M3 3v5h5"/>
+                            </svg>
                         </button>
-                        <button class="btn-outline" id="btnClearCanvas" title="Clear All Canvas Layers (ล้างเลเยอร์ทั้งหมด)">
+                        <button class="btn-outline" id="btnClearCanvas" title="Clear All">
                             <svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
-                        <button class="btn-outline" id="btnResetToP" title="Reset Default P Blueprint">
-                            <svg viewBox="0 0 24 24"><path d="M7 4h6a4.5 4.5 0 0 1 0 9H7V4zm0 6h6a1.5 1.5 0 0 0 0-3H7v3z" fill="currentColor"/><path d="M7 4v16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <button class="btn-outline" id="btnResetToP" title="Default P">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 4h7a4 4 0 0 1 0 8H6V4z"/>
+                                <path d="M6 12v8"/>
+                            </svg>
                         </button>
                     </div>
 
@@ -862,6 +888,66 @@
         }
     }
 
+    function setupPanelResizer() {
+        const resizer = document.getElementById('panelResizer');
+        const panel = document.getElementById('toolsPanel');
+        const panelContent = panel.querySelector('.panel-content');
+        if (!resizer || !panel) return;
+
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        resizer.addEventListener('mousedown', (e) => {
+            if (window.innerWidth <= 991) return;
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = panel.offsetWidth;
+            resizer.classList.add('is-resizing');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isResizing || window.innerWidth <= 991) return;
+            
+            const dx = startX - e.clientX;
+            let newWidth = startWidth + dx;
+            const minWidth = 480;
+
+            panel.style.width = `${newWidth}px`;
+            panel.style.minWidth = `${newWidth}px`;
+
+            if (panelContent.scrollHeight > panelContent.clientHeight) {
+                let currentW = newWidth;
+                while (currentW > minWidth && panelContent.scrollHeight > panelContent.clientHeight) {
+                    currentW -= 2;
+                    panel.style.width = `${currentW}px`;
+                    panel.style.minWidth = `${currentW}px`;
+                }
+                newWidth = Math.max(minWidth, currentW);
+            }
+
+            if (newWidth < minWidth) {
+                newWidth = minWidth;
+            }
+
+            panel.style.width = `${newWidth}px`;
+            panel.style.minWidth = `${newWidth}px`;
+            
+            renderTessellation();
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('is-resizing');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+
     function init() {
         generateExplorerGrid();
         setupDropdownOptions();
@@ -873,6 +959,7 @@
         bindEvents();
         setupResponsiveLayoutEngine();
         setupSaveExportModal();
+        setupPanelResizer();
         renderTileGridOverlay();
         setTimeout(adjustMobilePanelHeight, 150);
     }
@@ -984,7 +1071,6 @@
             }
         });
 
-        // Fallback active tool if current selected tool got locked
         if (isPixelate && selectedTool !== 'fill' && selectedTool !== 'eraser') {
             toolBtns.forEach(b => b.classList.remove('active'));
             const bucketBtn = document.getElementById('btnBucketTool');
@@ -992,7 +1078,6 @@
             selectedTool = 'fill';
         }
 
-        // Lock/Gray out Stroke & Inner Fill controls
         const strokeColorInput = document.getElementById('strokeColor');
         const strokeChkInput = document.getElementById('chkUseStroke');
         const fillColorInput = document.getElementById('fillColor');
@@ -1114,10 +1199,10 @@
             tempCanvas.height = baseCanvas.height;
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.drawImage(baseCanvas, 0, 0);
+            tempCtx.drawImage(pixelPaintCanvas, 0, 0);
 
             applyPixelate(tempCtx, tempCanvas.width, tempCanvas.height, 1, 1, subDiv, pixelateMode);
             ctx.drawImage(tempCanvas, 0, 0);
-            ctx.drawImage(pixelPaintCanvas, 0, 0);
         } else {
             ctx.drawImage(baseCanvas, 0, 0);
             ctx.drawImage(pixelPaintCanvas, 0, 0);
@@ -1138,34 +1223,42 @@
         });
     }
 
-    function floodFill(targetCtx, startX, startY, fillColor) {
-        const imageData = targetCtx.getImageData(0, 0, 240, 240);
-        const data = imageData.data;
-        const targetColor = getPixelColor(startX, startY);
-        
+    function floodFillOnPaintLayer(startX, startY, fillColor) {
+        const compositeData = ctx.getImageData(0, 0, 240, 240).data;
+        const paintImageData = pixelPaintCtx.getImageData(0, 0, 240, 240);
+        const paintData = paintImageData.data;
+
+        function getCompColor(x, y) {
+            const index = (y * 240 + x) * 4;
+            return [compositeData[index], compositeData[index + 1], compositeData[index + 2], compositeData[index + 3]];
+        }
+
+        const targetColor = getCompColor(startX, startY);
         if (colorsMatch(targetColor, fillColor)) return;
 
         const queue = [[startX, startY]];
-        while (queue.length > 0) {
-            const [x, y] = queue.shift();
-            if (x < 0 || x >= 240 || y < 0 || y >= 240) continue;
+        const visited = new Uint8Array(240 * 240);
 
-            const currentColor = getPixelColor(x, y);
+        while (queue.length > 0) {
+            const [x, y] = queue.pop();
+            if (x < 0 || x >= 240 || y < 0 || y >= 240) continue;
+            const idx = y * 240 + x;
+            if (visited[idx]) continue;
+            visited[idx] = 1;
+
+            const currentColor = getCompColor(x, y);
             if (colorsMatch(currentColor, targetColor)) {
-                setPixelColor(x, y, fillColor);
+                const pixelIndex = idx * 4;
+                paintData[pixelIndex] = fillColor[0];
+                paintData[pixelIndex + 1] = fillColor[1];
+                paintData[pixelIndex + 2] = fillColor[2];
+                paintData[pixelIndex + 3] = 255;
+
                 queue.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
             }
         }
-        targetCtx.putImageData(imageData, 0, 0);
+        pixelPaintCtx.putImageData(paintImageData, 0, 0);
 
-        function getPixelColor(x, y) {
-            const index = (y * 240 + x) * 4;
-            return [data[index], data[index + 1], data[index + 2], data[index + 3]];
-        }
-        function setPixelColor(x, y, color) {
-            const index = (y * 240 + x) * 4;
-            data[index] = color[0]; data[index + 1] = color[1]; data[index + 2] = color[2]; data[index + 3] = 255;
-        }
         function colorsMatch(c1, c2) {
             return Math.abs(c1[0] - c2[0]) < 15 && Math.abs(c1[1] - c2[1]) < 15 && Math.abs(c1[2] - c2[2]) < 15;
         }
@@ -1372,7 +1465,6 @@
             e.target.value = '';
         });
 
-        // Rotate & Flip Control Handlers
         document.getElementById('btnRotateLeft').onclick = () => {
             if (cropper) cropper.rotate(-90);
         };
@@ -1726,7 +1818,7 @@
                         chosenColor = darkestColor;
                     } else if (pixelMode === 'lightest' && lightestColor) {
                         chosenColor = lightestColor;
-                    } else { // 'frequent' (Most Frequent / Dominant)
+                    } else {
                         for (const [key, count] of Object.entries(colorCounts)) {
                             if (count === maxCount) {
                                 const [rVal, gVal, bVal] = key.split(',');
@@ -1871,7 +1963,7 @@
 
         if (selectedTool === 'fill') {
             const paintColor = hexToRgb(document.getElementById('bucketColor').value);
-            floodFill(baseCtx, Math.floor(startX), Math.floor(startY), paintColor);
+            floodFillOnPaintLayer(Math.floor(startX), Math.floor(startY), paintColor);
             saveCanvasState(); updateCompositeCanvas(); return;
         }
 
@@ -1887,14 +1979,14 @@
             return;
         }
 
-        baseCtx.globalCompositeOperation = 'source-over';
-        baseCtx.lineWidth = selectedLineWidth;
-        baseCtx.strokeStyle = document.getElementById('strokeColor').value;
-        baseCtx.fillStyle = document.getElementById('fillColor').value;
-        baseCtx.lineCap = "round"; baseCtx.lineJoin = "round";
+        pixelPaintCtx.globalCompositeOperation = 'source-over';
+        pixelPaintCtx.lineWidth = selectedLineWidth;
+        pixelPaintCtx.strokeStyle = document.getElementById('strokeColor').value;
+        pixelPaintCtx.fillStyle = document.getElementById('fillColor').value;
+        pixelPaintCtx.lineCap = "round"; pixelPaintCtx.lineJoin = "round";
 
         if (selectedTool === 'brush' && document.getElementById('chkUseStroke').checked) {
-            baseCtx.beginPath(); baseCtx.moveTo(startX, startY);
+            pixelPaintCtx.beginPath(); pixelPaintCtx.moveTo(startX, startY);
         }
     }
 
@@ -1921,10 +2013,10 @@
         const useStroke = document.getElementById('chkUseStroke').checked;
 
         if (selectedTool === 'brush') {
-            if (useStroke) { baseCtx.lineTo(currentX, currentY); baseCtx.stroke(); }
+            if (useStroke) { pixelPaintCtx.lineTo(currentX, currentY); pixelPaintCtx.stroke(); }
         } else if (selectedTool !== 'fill') {
-            baseCtx.putImageData(canvasSnapshotBase, 0, 0);
-            baseCtx.beginPath();
+            pixelPaintCtx.putImageData(canvasSnapshotPixel, 0, 0);
+            pixelPaintCtx.beginPath();
             let width = currentX - startX; let height = currentY - startY;
 
             if (isCtrlPressed) {
@@ -1933,17 +2025,17 @@
             }
 
             if (selectedTool === 'line') {
-                if (useStroke) { baseCtx.moveTo(startX, startY); baseCtx.lineTo(currentX, currentY); baseCtx.stroke(); }
+                if (useStroke) { pixelPaintCtx.moveTo(startX, startY); pixelPaintCtx.lineTo(currentX, currentY); pixelPaintCtx.stroke(); }
             } else if (selectedTool === 'rect') {
-                baseCtx.rect(startX, startY, width, height);
-                if (useFill) baseCtx.fill(); if (useStroke) baseCtx.stroke();
+                pixelPaintCtx.rect(startX, startY, width, height);
+                if (useFill) pixelPaintCtx.fill(); if (useStroke) pixelPaintCtx.stroke();
             } else if (selectedTool === 'circle') {
                 const radius = Math.sqrt(width * width + height * height);
-                baseCtx.arc(startX, startY, radius, 0, 2 * Math.PI);
-                if (useFill) baseCtx.fill(); if (useStroke) baseCtx.stroke();
+                pixelPaintCtx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                if (useFill) pixelPaintCtx.fill(); if (useStroke) pixelPaintCtx.stroke();
             } else if (selectedTool === 'triangle') {
-                baseCtx.moveTo(startX + width / 2, startY); baseCtx.lineTo(startX + width, startY + height); baseCtx.lineTo(startX, startY + height); baseCtx.closePath();
-                if (useFill) baseCtx.fill(); if (useStroke) baseCtx.stroke();
+                pixelPaintCtx.moveTo(startX + width / 2, startY); pixelPaintCtx.lineTo(startX + width, startY + height); pixelPaintCtx.lineTo(startX, startY + height); pixelPaintCtx.closePath();
+                if (useFill) pixelPaintCtx.fill(); if (useStroke) pixelPaintCtx.stroke();
             }
         }
         updateCompositeCanvas();
@@ -1985,7 +2077,7 @@
 
         let defaultPxWidth = 1000;
         let defaultPxHeight = 1000;
-        let aspectRatio = 1; // Width / Height
+        let aspectRatio = 1;
 
         function updateExportFields() {
             const cols = parseInt(document.getElementById('gridCols').value) || 8;
@@ -2147,7 +2239,7 @@
                 for (let r = 0; r <= totalSubRows; r++) {
                     eCtx.beginPath();
                     eCtx.moveTo(0, r * subH);
-                    eCtx.lineTo(0, exportCanvas.height);
+                    eCtx.lineTo(exportCanvas.width, r * subH);
                     eCtx.stroke();
                 }
                 eCtx.restore();
@@ -2177,7 +2269,7 @@
             exportCanvas.toBlob(function(blob) {
                 if (!blob) return;
                 const url = URL.createObjectURL(blob);
-                const filename = `Tessellation-${activePattern.title}.png`;
+                const filename = `Pattern-${activePattern.title}.png`;
 
                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
