@@ -276,8 +276,9 @@
         .tool-btn-outline {
             height: 36px; background: transparent; border: 1px solid #cbd5e1; border-radius: 6px;
             cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569;
+            transition: all 0.2s ease;
         }
-        .tool-btn-outline:hover, .tool-btn-outline.active { border-color: var(--text-color); background: #f1f5f9; color: #0f172a; }
+        .tool-btn-outline:hover:not(:disabled), .tool-btn-outline.active:not(:disabled) { border-color: var(--text-color); background: #f1f5f9; color: #0f172a; }
         .tool-btn-outline svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
 
         /* Line Size Horizontal */
@@ -288,7 +289,7 @@
         .dot-shape { background: #475569; border-radius: 50%; }
 
         /* Color Controls with Checkboxes */
-        .color-picker-wrapper { display: flex; flex-direction: column; gap: 4px; }
+        .color-picker-wrapper { display: flex; flex-direction: column; gap: 4px; transition: opacity 0.2s ease; }
         .color-picker-circle-row { display: flex; align-items: center; gap: 6px; }
         .circle-color-picker {
             -webkit-appearance: none; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; background: none; overflow: hidden; padding: 0;
@@ -952,11 +953,69 @@
         const buttons = document.querySelectorAll('.tool-btn-outline');
         buttons.forEach(btn => {
             btn.onclick = () => {
+                if (btn.hasAttribute('disabled')) return;
                 buttons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedTool = btn.getAttribute('data-tool');
             };
         });
+    }
+
+    function updatePixelateToolLock() {
+        const isPixelate = document.getElementById('chkPixelate').checked;
+        const toolBtns = document.querySelectorAll('#toolsGrid .tool-btn-outline');
+        
+        toolBtns.forEach(btn => {
+            const tool = btn.getAttribute('data-tool');
+            if (isPixelate) {
+                if (tool !== 'fill' && tool !== 'eraser') {
+                    btn.style.opacity = '0.35';
+                    btn.style.pointerEvents = 'none';
+                    btn.setAttribute('disabled', 'true');
+                } else {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                    btn.removeAttribute('disabled');
+                }
+            } else {
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.removeAttribute('disabled');
+            }
+        });
+
+        // Fallback active tool if current selected tool got locked
+        if (isPixelate && selectedTool !== 'fill' && selectedTool !== 'eraser') {
+            toolBtns.forEach(b => b.classList.remove('active'));
+            const bucketBtn = document.getElementById('btnBucketTool');
+            if (bucketBtn) bucketBtn.classList.add('active');
+            selectedTool = 'fill';
+        }
+
+        // Lock/Gray out Stroke & Inner Fill controls
+        const strokeColorInput = document.getElementById('strokeColor');
+        const strokeChkInput = document.getElementById('chkUseStroke');
+        const fillColorInput = document.getElementById('fillColor');
+        const fillChkInput = document.getElementById('chkUseFill');
+
+        const strokeWrapper = strokeColorInput ? strokeColorInput.closest('.color-picker-wrapper') : null;
+        const fillWrapper = fillColorInput ? fillColorInput.closest('.color-picker-wrapper') : null;
+
+        if (isPixelate) {
+            if (strokeWrapper) strokeWrapper.style.opacity = '0.35';
+            if (fillWrapper) fillWrapper.style.opacity = '0.35';
+            if (strokeColorInput) strokeColorInput.disabled = true;
+            if (strokeChkInput) strokeChkInput.disabled = true;
+            if (fillColorInput) fillColorInput.disabled = true;
+            if (fillChkInput) fillChkInput.disabled = true;
+        } else {
+            if (strokeWrapper) strokeWrapper.style.opacity = '1';
+            if (fillWrapper) fillWrapper.style.opacity = '1';
+            if (strokeColorInput) strokeColorInput.disabled = false;
+            if (strokeChkInput) strokeChkInput.disabled = false;
+            if (fillColorInput) fillColorInput.disabled = false;
+            if (fillChkInput) fillChkInput.disabled = false;
+        }
     }
 
     function setupLineWidthSelector() {
@@ -1257,6 +1316,7 @@
         document.getElementById('chkPixelate').onchange = (e) => {
             const modeRow = document.getElementById('pixelateModeRow');
             if (modeRow) modeRow.style.display = e.target.checked ? 'flex' : 'none';
+            updatePixelateToolLock();
             updateCompositeCanvas();
             renderTileGridOverlay();
             adjustMobilePanelHeight();
@@ -1436,8 +1496,10 @@
         };
 
         document.getElementById('btnBucketTool').onclick = () => {
+            const bucketBtn = document.getElementById('btnBucketTool');
+            if (bucketBtn.hasAttribute('disabled')) return;
             document.querySelectorAll('.tool-btn-outline').forEach(b => b.classList.remove('active'));
-            document.getElementById('btnBucketTool').classList.add('active');
+            bucketBtn.classList.add('active');
             selectedTool = 'fill';
         };
 
@@ -1583,6 +1645,7 @@
             autoFitPreviewToViewport();
         }
         setupResponsiveLayoutEngine();
+        updatePixelateToolLock();
     }
 
     function applyPixelate(oCtx, width, height, cols, rows, subDiv, pixelMode = 'frequent') {
@@ -1788,12 +1851,6 @@
             } else if (selectedTool === 'fill') {
                 pixelPaintCtx.fillStyle = document.getElementById('bucketColor').value;
                 pixelPaintCtx.fillRect(col * cellW, row * cellH, cellW, cellH);
-            } else {
-                const useFill = document.getElementById('chkUseFill').checked;
-                const useStroke = document.getElementById('chkUseStroke').checked;
-                pixelPaintCtx.fillStyle = useFill ? document.getElementById('fillColor').value :
-                               (useStroke ? document.getElementById('strokeColor').value : document.getElementById('bgColor').value);
-                pixelPaintCtx.fillRect(col * cellW, row * cellH, cellW, cellH);
             }
             updateCompositeCanvas();
         }
@@ -1823,14 +1880,9 @@
         canvasSnapshotPixel = pixelPaintCtx.getImageData(0, 0, 240, 240);
 
         if (selectedTool === 'eraser') {
-            baseCtx.globalCompositeOperation = 'destination-out';
             pixelPaintCtx.globalCompositeOperation = 'destination-out';
-            baseCtx.lineWidth = selectedLineWidth;
             pixelPaintCtx.lineWidth = selectedLineWidth;
-            baseCtx.lineCap = "round"; baseCtx.lineJoin = "round";
             pixelPaintCtx.lineCap = "round"; pixelPaintCtx.lineJoin = "round";
-            
-            baseCtx.beginPath(); baseCtx.moveTo(startX, startY);
             pixelPaintCtx.beginPath(); pixelPaintCtx.moveTo(startX, startY);
             return;
         }
@@ -1860,7 +1912,6 @@
         }
 
         if (selectedTool === 'eraser') {
-            baseCtx.lineTo(currentX, currentY); baseCtx.stroke();
             pixelPaintCtx.lineTo(currentX, currentY); pixelPaintCtx.stroke();
             updateCompositeCanvas();
             return;
@@ -2165,3 +2216,4 @@
 
 </body>
 </html>
+
