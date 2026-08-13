@@ -14,6 +14,7 @@
             --border-color: #cbd5e1;
             --grid-size: 60px;
             --mini-grid-size: 25px;
+            --mobile-canvas-size: 140px;
         }
 
         * { box-sizing: border-box; }
@@ -395,27 +396,23 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 100%;
-                height: 18px;
+                padding: 8px 0 4px 0;
                 cursor: ns-resize;
-                padding: 4px 0;
                 touch-action: none;
                 background: #ffffff;
                 border-bottom: 1px solid #f1f5f9;
-                flex-shrink: 0;
             }
-            .mobile-drag-handle::after {
-                content: '';
+            .drag-pill {
                 width: 38px;
-                height: 4px;
+                height: 5px;
                 background: #cbd5e1;
-                border-radius: 2px;
+                border-radius: 3px;
             }
 
             /* Bottom Panel System */
             .tools-panel {
                 width: 100% !important; min-width: 100% !important;
-                height: auto; max-height: 290px;
+                height: auto !important; max-height: 290px;
                 border-left: none; border-top: 1px solid #e2e8f0;
                 position: fixed; bottom: 60px; left: 0; z-index: 1001;
                 background: #ffffff; transform: translateY(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -436,15 +433,14 @@
             .tool-group .tool-row { margin-bottom: 14px; }
 
             .studio-layout-container {
-                grid-template-columns: 50px 1fr 60px; gap: 8px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
+                grid-template-columns: 55px 1fr 65px; gap: 8px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
             }
             
             .studio-center-col { display: flex; justify-content: center; align-items: center; width: 100%; }
             .canvas-container { 
-                width: 100%; 
-                max-width: min(calc(100vw - 120px), calc(100% - 10px));
-                height: auto; 
-                aspect-ratio: 1/1; 
+                width: var(--mobile-canvas-size, 140px); 
+                height: var(--mobile-canvas-size, 140px); 
+                max-width: 100%;
                 border-radius: 6px; 
                 margin: 0 auto; 
             }
@@ -532,8 +528,8 @@
         </div>
 
         <div class="tools-panel" id="toolsPanel">
+            <div class="mobile-drag-handle" id="mobileDragHandle"><div class="drag-pill"></div></div>
             <div id="panelResizer" class="panel-resizer"></div>
-            <div id="mobileDragHandle" class="mobile-drag-handle"></div>
             <div class="panel-content">
                 <div style="margin-bottom: 15px;" id="desktopPanelRulesZone">
                     <label style="font-size:0.85rem; font-weight:600; color:var(--primary-color); display:block; margin-bottom:6px;">Layout Rules</label>
@@ -864,9 +860,6 @@
     ];
 
     let currentImageUrl = "";
-    let savedBaseUrl = "";
-    let savedPaintUrl = "";
-
     let activePattern = null;
     let selectedTool = "brush";
     let selectedLineWidth = 6;
@@ -921,9 +914,66 @@
             } else if (activeTab.id === 'tabTileStudio') {
                 targetMaxHeight = '290px';
             }
+            panel.style.height = '';
             panel.style.maxHeight = targetMaxHeight;
-            panel.style.height = 'auto';
+            document.documentElement.style.setProperty('--mobile-canvas-size', '140px');
         }
+    }
+
+    function setupMobilePanelResizer() {
+        const handle = document.getElementById('mobileDragHandle');
+        const panel = document.getElementById('toolsPanel');
+        if (!handle || !panel) return;
+
+        let startY = 0;
+        let startHeight = 0;
+        let isDragging = false;
+
+        function onPointerDown(e) {
+            if (window.innerWidth > 991) return;
+            isDragging = true;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            startY = clientY;
+            startHeight = panel.offsetHeight;
+            document.body.style.userSelect = 'none';
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging || window.innerWidth > 991) return;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const deltaY = startY - clientY;
+            let newHeight = startHeight + deltaY;
+
+            const activeTab = document.querySelector('.tool-group.active-tab');
+            let minHeight = 290;
+            if (activeTab && activeTab.id === 'tabGridExpansion') minHeight = 185;
+
+            const maxHeight = window.innerHeight - 70;
+            newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+
+            panel.style.maxHeight = newHeight + 'px';
+            panel.style.height = newHeight + 'px';
+
+            const extraHeight = newHeight - minHeight;
+            const maxCanvasWidth = Math.min(window.innerWidth - 130, newHeight - 150);
+            const canvasSize = Math.max(140, Math.min(140 + extraHeight, maxCanvasWidth));
+            document.documentElement.style.setProperty('--mobile-canvas-size', canvasSize + 'px');
+        }
+
+        function onPointerEnd() {
+            if (isDragging) {
+                isDragging = false;
+                document.body.style.userSelect = '';
+            }
+        }
+
+        handle.addEventListener('mousedown', onPointerDown);
+        window.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('mouseup', onPointerEnd);
+
+        handle.addEventListener('touchstart', onPointerDown, { passive: true });
+        window.addEventListener('touchmove', onPointerMove, { passive: true });
+        window.addEventListener('touchend', onPointerEnd, { passive: true });
     }
 
     function setupPanelResizer() {
@@ -986,47 +1036,6 @@
         });
     }
 
-    function setupMobilePanelResizer() {
-        const handle = document.getElementById('mobileDragHandle');
-        const panel = document.getElementById('toolsPanel');
-        if (!handle || !panel) return;
-
-        let startY = 0;
-        let startHeight = 0;
-        let isDragging = false;
-
-        const onStart = (clientY) => {
-            if (window.innerWidth > 991) return;
-            isDragging = true;
-            startY = clientY;
-            startHeight = panel.offsetHeight;
-        };
-
-        const onMove = (clientY) => {
-            if (!isDragging || window.innerWidth > 991) return;
-            const dy = startY - clientY;
-            let newHeight = startHeight + dy;
-            const minHeight = 160;
-            const maxHeight = window.innerHeight - 60;
-
-            newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
-            panel.style.maxHeight = `${newHeight}px`;
-            panel.style.height = `${newHeight}px`;
-        };
-
-        const onEnd = () => {
-            isDragging = false;
-        };
-
-        handle.addEventListener('touchstart', (e) => onStart(e.touches[0].clientY), { passive: true });
-        window.addEventListener('touchmove', (e) => { if (isDragging) onMove(e.touches[0].clientY); }, { passive: true });
-        window.addEventListener('touchend', onEnd);
-
-        handle.addEventListener('mousedown', (e) => onStart(e.clientY));
-        window.addEventListener('mousemove', (e) => { if (isDragging) onMove(e.clientY); });
-        window.addEventListener('mouseup', onEnd);
-    }
-
     function init() {
         generateExplorerGrid();
         setupDropdownOptions();
@@ -1062,10 +1071,7 @@
                 label.textContent = label.getAttribute('data-desktop');
             });
             const panel = document.getElementById('toolsPanel');
-            if(panel) {
-                panel.style.maxHeight = 'none';
-                panel.style.height = '100%';
-            }
+            if(panel) panel.style.maxHeight = 'none';
         }
     }
 
@@ -1263,9 +1269,6 @@
         baseCtx.textAlign = "center";
         baseCtx.textBaseline = "middle";
         baseCtx.fillText("P", baseCanvas.width / 2, baseCanvas.height / 2);
-
-        savedBaseUrl = baseCanvas.toDataURL();
-        savedPaintUrl = pixelPaintCanvas.toDataURL();
 
         updateCompositeCanvas();
         saveCanvasState();
@@ -1480,8 +1483,6 @@
 
         document.getElementById('btnClearToP').onclick = () => {
             currentImageUrl = "";
-            savedBaseUrl = "";
-            savedPaintUrl = "";
             drawingHistory = [];
             historyStep = -1;
             generateExplorerGrid();
@@ -1590,8 +1591,6 @@
             baseCtx.clearRect(0, 0, 240, 240);
             pixelPaintCtx.clearRect(0, 0, 240, 240);
             baseCtx.drawImage(fullCanvas, 0, 0, 240, 240);
-            savedBaseUrl = baseCanvas.toDataURL();
-            savedPaintUrl = pixelPaintCanvas.toDataURL();
             saveCanvasState(); 
             updateCompositeCanvas();
             closeCropModal();
@@ -1603,8 +1602,6 @@
             baseCtx.clearRect(0, 0, 240, 240);
             pixelPaintCtx.clearRect(0, 0, 240, 240);
             baseCtx.drawImage(croppedCanvas, 0, 0, 240, 240);
-            savedBaseUrl = baseCanvas.toDataURL();
-            savedPaintUrl = pixelPaintCanvas.toDataURL();
             saveCanvasState(); 
             updateCompositeCanvas();
             closeCropModal();
@@ -1615,7 +1612,6 @@
         
         document.getElementById('btnClearPaint').onclick = () => {
             pixelPaintCtx.clearRect(0, 0, 240, 240);
-            savedPaintUrl = pixelPaintCanvas.toDataURL();
             saveCanvasState();
             updateCompositeCanvas();
         };
@@ -1623,8 +1619,6 @@
         document.getElementById('btnClearCanvas').onclick = () => { 
             baseCtx.clearRect(0, 0, 240, 240); 
             pixelPaintCtx.clearRect(0, 0, 240, 240);
-            savedBaseUrl = "";
-            savedPaintUrl = "";
             saveCanvasState(); 
             updateCompositeCanvas(); 
         };
@@ -1641,17 +1635,12 @@
             baseCtx.textBaseline = "middle";
             baseCtx.fillText("P", baseCanvas.width / 2, baseCanvas.height / 2);
 
-            savedBaseUrl = baseCanvas.toDataURL();
-            savedPaintUrl = pixelPaintCanvas.toDataURL();
-
             saveCanvasState();
             updateCompositeCanvas();
         };
 
         function closeEditorRoutine() {
             currentImageUrl = canvas.toDataURL();
-            savedBaseUrl = baseCanvas.toDataURL();
-            savedPaintUrl = pixelPaintCanvas.toDataURL();
             document.getElementById('editorView').style.display = 'none';
             document.getElementById('mainView').style.display = 'block';
             generateExplorerGrid();
@@ -1822,56 +1811,25 @@
         baseCanvas.style.backgroundColor = document.getElementById('bgColor').value;
         canvas.style.backgroundColor = document.getElementById('bgColor').value;
 
-        if (savedBaseUrl || savedPaintUrl) {
-            const imgBase = new Image();
-            const imgPaint = new Image();
-            let loadedCount = 0;
-            const onBothLoaded = () => {
-                baseCtx.clearRect(0, 0, 240, 240);
-                pixelPaintCtx.clearRect(0, 0, 240, 240);
-                if (savedBaseUrl) baseCtx.drawImage(imgBase, 0, 0, 240, 240);
-                if (savedPaintUrl) pixelPaintCtx.drawImage(imgPaint, 0, 0, 240, 240);
-                
-                if (drawingHistory.length === 0) {
-                    saveCanvasState();
-                }
-                updateCompositeCanvas();
-                renderTileGridOverlay();
-                autoFitPreviewToViewport();
-            };
-
-            if (savedBaseUrl && savedPaintUrl) {
-                imgBase.onload = () => { loadedCount++; if (loadedCount === 2) onBothLoaded(); };
-                imgPaint.onload = () => { loadedCount++; if (loadedCount === 2) onBothLoaded(); };
-                imgBase.src = savedBaseUrl;
-                imgPaint.src = savedPaintUrl;
-            } else if (savedBaseUrl) {
-                imgBase.onload = () => { onBothLoaded(); };
-                imgBase.src = savedBaseUrl;
-            } else if (savedPaintUrl) {
-                imgPaint.onload = () => { onBothLoaded(); };
-                imgPaint.src = savedPaintUrl;
-            }
-        } else if (currentImageUrl) {
+        if (drawingHistory.length > 0 && currentImageUrl) {
+            updateCompositeCanvas();
+            renderTileGridOverlay();
+            autoFitPreviewToViewport();
+        } else if(currentImageUrl) {
             const img = new Image();
             img.onload = () => {
                 baseCtx.clearRect(0, 0, 240, 240);
                 pixelPaintCtx.clearRect(0, 0, 240, 240);
                 baseCtx.drawImage(img, 0, 0, 240, 240);
-                if (drawingHistory.length === 0) saveCanvasState();
-                updateCompositeCanvas();
+                drawingHistory = []; historyStep = -1; saveCanvasState(); updateCompositeCanvas();
                 renderTileGridOverlay();
                 autoFitPreviewToViewport();
             };
             img.src = currentImageUrl;
         } else {
-            if (drawingHistory.length === 0) {
-                setupCanvasDefault();
-            } else {
-                updateCompositeCanvas();
-                renderTileGridOverlay();
-                autoFitPreviewToViewport();
-            }
+            drawingHistory = []; historyStep = -1; setupCanvasDefault(); updateCompositeCanvas();
+            renderTileGridOverlay();
+            autoFitPreviewToViewport();
         }
         setupResponsiveLayoutEngine();
         updatePixelateToolLock();
@@ -2081,7 +2039,6 @@
                 pixelPaintCtx.fillStyle = document.getElementById('bucketColor').value;
                 pixelPaintCtx.fillRect(col * cellW, row * cellH, cellW, cellH);
             }
-            savedPaintUrl = pixelPaintCanvas.toDataURL();
             updateCompositeCanvas();
         }
     }
@@ -2102,7 +2059,6 @@
         if (selectedTool === 'fill') {
             const paintColor = hexToRgb(document.getElementById('bucketColor').value);
             floodFillOnPaintLayer(Math.floor(startX), Math.floor(startY), paintColor);
-            savedPaintUrl = pixelPaintCanvas.toDataURL();
             saveCanvasState(); updateCompositeCanvas(); return;
         }
 
@@ -2185,8 +2141,6 @@
         isDrawing = false; 
         baseCtx.globalCompositeOperation = 'source-over';
         pixelPaintCtx.globalCompositeOperation = 'source-over';
-        savedBaseUrl = baseCanvas.toDataURL();
-        savedPaintUrl = pixelPaintCanvas.toDataURL();
         saveCanvasState(); 
     }
 
@@ -2203,8 +2157,6 @@
         if (historyStep >= 0 && historyStep < drawingHistory.length) { 
             baseCtx.putImageData(drawingHistory[historyStep].base, 0, 0); 
             pixelPaintCtx.putImageData(drawingHistory[historyStep].pixel, 0, 0);
-            savedBaseUrl = baseCanvas.toDataURL();
-            savedPaintUrl = pixelPaintCanvas.toDataURL();
             updateCompositeCanvas(); 
         } 
     }
