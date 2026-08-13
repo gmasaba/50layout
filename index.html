@@ -208,6 +208,10 @@
             display: none;
         }
 
+        .mobile-drag-handle {
+            display: none;
+        }
+
         @media (min-width: 992px) {
             .panel-resizer {
                 display: block;
@@ -379,20 +383,42 @@
 
             .editor-container { flex-direction: column; height: 100vh; width: 100vw; }
             
-            .workspace { height: calc(100% - 60px); flex: 1; width: 100%; padding-bottom: 350px; }
+            .workspace { height: calc(100% - 60px); flex: 1; width: 100%; padding-bottom: 250px; }
             .workspace-header { padding: 8px 12px; gap: 8px; }
             .workspace-header span { display: none; }
             
             #headerLayoutSelectWrapper { display: flex !important; visibility: visible !important; width: auto; max-width: 55%; }
             #headerLayoutSelectWrapper select { height: 36px; padding: 4px 8px; font-size: 0.85rem; border-radius: 6px; }
 
+            .mobile-drag-handle {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 20px;
+                width: 100%;
+                cursor: ns-resize;
+                touch-action: none;
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+                flex-shrink: 0;
+            }
+            .drag-indicator {
+                width: 40px;
+                height: 4px;
+                background: #cbd5e1;
+                border-radius: 2px;
+            }
+
             /* Bottom Panel System */
             .tools-panel {
                 width: 100% !important; min-width: 100% !important;
-                height: auto !important; max-height: 370px;
+                height: auto !important; max-height: var(--mobile-panel-height, 290px);
                 border-left: none; border-top: 1px solid #e2e8f0;
                 position: fixed; bottom: 60px; left: 0; z-index: 1001;
                 background: #ffffff; transform: translateY(0); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .tools-panel.is-resizing-mobile {
+                transition: none !important;
             }
             .tools-panel.collapsed { transform: translateY(100%) !important; }
 
@@ -410,11 +436,18 @@
             .tool-group .tool-row { margin-bottom: 14px; }
 
             .studio-layout-container {
-                grid-template-columns: 55px 1fr 65px; gap: 10px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
+                grid-template-columns: 55px 1fr 65px; gap: 8px; margin-top: 2px; width: 100%; align-items: center; justify-content: center;
             }
             
             .studio-center-col { display: flex; justify-content: center; align-items: center; width: 100%; }
-            .canvas-container { width: 210px; height: 210px; border-radius: 8px; margin: 0 auto; }
+            .canvas-container { 
+                width: min(100%, calc(var(--mobile-panel-height, 290px) * 0.52));
+                max-width: 230px;
+                height: auto;
+                aspect-ratio: 1/1;
+                border-radius: 6px; 
+                margin: 0 auto; 
+            }
             
             .tools-grid-3x2 { gap: 4px; }
             .tool-btn-outline { height: 28px; padding: 2px; }
@@ -427,9 +460,9 @@
             .circle-color-picker { width: 20px; height: 20px; }
             .color-checkbox { width: 13px; height: 13px; }
             
-            .canvas-actions-row { margin-top: 8px; gap: 6px; }
-            .canvas-actions-row .btn-outline { padding: 4px; height: 32px; flex: 1; }
-            .canvas-actions-row .btn-outline svg { width: 16px; height: 16px; }
+            .canvas-actions-row { margin-top: 6px; gap: 4px; }
+            .canvas-actions-row .btn-outline { padding: 4px; height: 28px; flex: 1; }
+            .canvas-actions-row .btn-outline svg { width: 14px; height: 14px; }
 
             /* Navigation Bar Bottom */
             .mobile-nav-bar {
@@ -499,6 +532,7 @@
         </div>
 
         <div class="tools-panel" id="toolsPanel">
+            <div id="mobileDragHandle" class="mobile-drag-handle"><div class="drag-indicator"></div></div>
             <div id="panelResizer" class="panel-resizer"></div>
             <div class="panel-content">
                 <div style="margin-bottom: 15px;" id="desktopPanelRulesZone">
@@ -882,9 +916,11 @@
             if (activeTab.id === 'tabGridExpansion') {
                 targetMaxHeight = '185px'; 
             } else if (activeTab.id === 'tabTileStudio') {
-                targetMaxHeight = '370px';
+                targetMaxHeight = '290px';
             }
+            panel.style.setProperty('--mobile-panel-height', targetMaxHeight);
             panel.style.maxHeight = targetMaxHeight;
+            panel.style.height = 'auto';
         }
     }
 
@@ -948,6 +984,68 @@
         });
     }
 
+    function setupMobilePanelResizer() {
+        const dragHandle = document.getElementById('mobileDragHandle');
+        const panel = document.getElementById('toolsPanel');
+        if (!dragHandle || !panel) return;
+
+        let startY = 0;
+        let startHeight = 0;
+        let isDragging = false;
+
+        function onStart(clientY) {
+            if (window.innerWidth > 991) return;
+            isDragging = true;
+            startY = clientY;
+            startHeight = panel.offsetHeight;
+            panel.classList.add('is-resizing-mobile');
+        }
+
+        function onMove(clientY) {
+            if (!isDragging || window.innerWidth > 991) return;
+            const deltaY = startY - clientY;
+            let newHeight = startHeight + deltaY;
+
+            const minHeight = 180;
+            const maxHeight = window.innerHeight - 70;
+
+            newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+
+            panel.style.setProperty('--mobile-panel-height', `${newHeight}px`);
+            panel.style.maxHeight = `${newHeight}px`;
+            panel.style.height = `${newHeight}px`;
+        }
+
+        function onEnd() {
+            if (isDragging) {
+                isDragging = false;
+                panel.classList.remove('is-resizing-mobile');
+            }
+        }
+
+        dragHandle.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                onStart(e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length === 1) {
+                onMove(e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', onEnd, { passive: true });
+
+        dragHandle.addEventListener('mousedown', (e) => {
+            onStart(e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) onMove(e.clientY);
+        });
+        window.addEventListener('mouseup', onEnd);
+    }
+
     function init() {
         generateExplorerGrid();
         setupDropdownOptions();
@@ -960,6 +1058,7 @@
         setupResponsiveLayoutEngine();
         setupSaveExportModal();
         setupPanelResizer();
+        setupMobilePanelResizer();
         renderTileGridOverlay();
         setTimeout(adjustMobilePanelHeight, 150);
     }
@@ -1329,7 +1428,7 @@
             if (window.innerWidth <= 991) {
                 const panel = document.getElementById('toolsPanel');
                 if (panel && !panel.classList.contains('collapsed')) {
-                    panelHeight = parseInt(panel.style.maxHeight) || 370;
+                    panelHeight = parseInt(panel.style.maxHeight) || 245;
                 }
                 panelHeight += 60;
             }
@@ -1394,6 +1493,8 @@
 
         document.getElementById('btnClearToP').onclick = () => {
             currentImageUrl = "";
+            drawingHistory = [];
+            historyStep = -1;
             generateExplorerGrid();
         };
 
@@ -1500,6 +1601,7 @@
             baseCtx.clearRect(0, 0, 240, 240);
             pixelPaintCtx.clearRect(0, 0, 240, 240);
             baseCtx.drawImage(fullCanvas, 0, 0, 240, 240);
+            drawingHistory = []; historyStep = -1;
             saveCanvasState(); 
             updateCompositeCanvas();
             closeCropModal();
@@ -1511,6 +1613,7 @@
             baseCtx.clearRect(0, 0, 240, 240);
             pixelPaintCtx.clearRect(0, 0, 240, 240);
             baseCtx.drawImage(croppedCanvas, 0, 0, 240, 240);
+            drawingHistory = []; historyStep = -1;
             saveCanvasState(); 
             updateCompositeCanvas();
             closeCropModal();
@@ -1544,6 +1647,7 @@
             baseCtx.textBaseline = "middle";
             baseCtx.fillText("P", baseCanvas.width / 2, baseCanvas.height / 2);
 
+            drawingHistory = []; historyStep = -1;
             saveCanvasState();
             updateCompositeCanvas();
         };
@@ -1720,7 +1824,11 @@
         baseCanvas.style.backgroundColor = document.getElementById('bgColor').value;
         canvas.style.backgroundColor = document.getElementById('bgColor').value;
 
-        if(currentImageUrl) {
+        if (drawingHistory.length > 0 && historyStep >= 0) {
+            restoreCanvasStep();
+            renderTileGridOverlay();
+            autoFitPreviewToViewport();
+        } else if (currentImageUrl) {
             const img = new Image();
             img.onload = () => {
                 baseCtx.clearRect(0, 0, 240, 240);
